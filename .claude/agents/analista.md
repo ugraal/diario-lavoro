@@ -31,6 +31,9 @@ Cosa esplicitamente non si fa in questa feature.
 ## Criteri di accettazione
 CA1, CA2, ... verificabili, nella forma "Dato … quando … allora …". Ognuno deve poter diventare un test o una verifica manuale descritta.
 
+## Dipendenze critiche
+Fornitori, servizi esterni e scelte che potrebbero cambiare toccati dalla richiesta (principio 7 di CLAUDE.md): per ognuno, dove gira, chi lo fornisce, cosa potrebbe cambiare in futuro. Se la richiesta non dice dove gira un servizio o chi lo fornisce, è una domanda aperta.
+
 ## Impatti e rischi
 Dati locali, Asana, LLM (costi, qualità, dataset), compatibilità con i dati esistenti, principi di CLAUDE.md.
 

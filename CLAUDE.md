@@ -23,6 +23,7 @@ Sviluppo su Windows: i comandi vanno bene da Git Bash. In sviluppo le chiavi si 
 4. **Indipendenza dal provider LLM.** Il codice chiama compiti con un nome (`src/main/llm/tasks.js`) attraverso il `Router`, mai un SDK direttamente. I nuovi compiti hanno uno schema JSON e una funzione `clean`.
 5. **Dataset.** Ogni chiamata LLM passa dal router e finisce in `llm_runs`; la proposta originale dell'LLM si conserva in `tasks.llm_original`. Non rompere queste due cose.
 6. **Sicurezza Electron.** `contextIsolation` attivo, niente `nodeIntegration`, il renderer parla solo con `window.api.invoke` e canali elencati in `src/preload.js`. Segreti solo tramite `src/main/secrets.js`.
+7. **Astrazione delle dipendenze critiche.** Ciò che dipende da un fornitore o da una scelta che può cambiare (provider e modelli LLM, router, posizione e trasporto dei servizi, Asana, storage, segreti, funzioni del sistema operativo) si usa solo attraverso un'interfaccia del progetto, mai direttamente. Un'interfaccia è un contratto documentato in JSDoc (`@typedef`/`@interface`) più un test di contratto che ogni implementazione deve passare; l'implementazione si sceglie da configurazione. Esempio guida: raggiungere un servizio si separa in `IConnection` (come ci si arriva: in-process, servizio locale sul PC, Web API su intranet, servizio esterno; con autenticazione, timeout, retry) e `IEndpoint` (con quale servizio si parla: API Anthropic, router, modello locale). Gli SDK dei fornitori si importano solo dentro la loro implementazione. Non si astrae ciò che non è critico: utility interne, interfaccia grafica, logica di dominio stabile.
 
 ## Convenzioni di codice
 
@@ -49,7 +50,7 @@ Regole per l'agente principale:
 
 - Le accettazioni delle fasi 1 e 3 le dà solo l'utente, sempre con una domanda esplicita (AskUserQuestion). Non dedurre un'accettazione da un messaggio ambiguo.
 - I subagent non possono fare domande all'utente: le domande aperte che riportano le poni tu.
-- Prima della fase 4 non si modificano `src/`, `test/` e `package*.json`. Un hook (`.claude/hooks/gate.js`) lo impone. Per una correzione urgente fuori dal workflow l'utente può creare il file `.claude/gate-off`, mai tu.
+- Prima della fase 4 non si modificano `src/`, `test/`, `plugin/`, `config/` e `package*.json`. Un hook (`.claude/hooks/gate.js`) lo impone. Per una correzione urgente fuori dal workflow l'utente può creare il file `.claude/gate-off`, mai tu.
 - Mai fare push su `main`, mai `push --force`. Si lavora su `feature/<id>`.
 
 ## Git
