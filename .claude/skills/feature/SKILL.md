@@ -17,12 +17,13 @@ Regole sempre valide:
 - Dopo ogni passo aggiorna `STATO.md` (campi e riga nel Registro) e fai un commit dei documenti.
 - All'utente mostra sintesi brevi; il dettaglio sta nei documenti. Indica sempre il percorso del documento.
 - Se un passo fallisce in modo che non sai risolvere, fermati, spiega e chiedi.
+- **Punto di ripartenza.** Alla fine delle fasi 1, 3 e 5, dopo il commit dei documenti, chiedi con AskUserQuestion: "Fase <n> chiusa e salvata. Ripartiamo da una conversazione pulita per la fase successiva?" con le opzioni "Riparto pulito (consigliato)" e "Continuo qui". Se l'utente sceglie di ripartire, scrivigli i due comandi da lanciare, `/clear` e poi `/feature <id>`, e fermati: non proseguire. Il motivo: ogni passo rimanda al modello tutta la conversazione, e la discussione delle fasi chiuse è già nei documenti e in `STATO.md`, quindi non serve più nel contesto.
 
 ## Fase 0: avvio o ripresa
 
 Se l'argomento corrisponde a una cartella esistente `docs/work/<id>/` (anche solo il numero, es. `003`):
 1. Fai `git switch feature/<id>` (se non ci sei già) e scrivi `<id>` in `.claude/feature-attiva`.
-2. Leggi `STATO.md` e i documenti già scritti, riassumi all'utente dove eravate e riprendi dalla fase indicata.
+2. Leggi `STATO.md` e solo i documenti che servono alla fase da riprendere: per le fasi 2 e 3 `01-analisi.md` (e `02-piano.md` per la 3); per la 4 `02-piano.md` e `04-implementazione.md`; per la 5 `04-implementazione.md`; per la 6 `05-verifica.md`. Gli altri li leggono i subagent quando servono. Riassumi all'utente in poche righe dove eravate e riprendi dalla fase indicata.
 
 Altrimenti è una nuova richiesta:
 1. Se l'argomento è vuoto, chiedi all'utente di descrivere la richiesta.
@@ -38,10 +39,10 @@ Altrimenti è una nuova richiesta:
 2. Leggi il documento. Se ha **domande aperte**, falle all'utente con AskUserQuestion (al massimo 4 per volta, con opzioni concrete), poi rilancia `analista` con le risposte. Ripeti finché non restano domande bloccanti.
 3. Mostra all'utente una sintesi: obiettivo, cosa rientra, cosa resta fuori, criteri di accettazione (elenco breve), rischi.
 4. Chiedi con AskUserQuestion: "Accetti l'analisi della feature <id> (revisione N)?" con le opzioni "Accetto" e "Servono modifiche" (con "Other" l'utente scrive cosa cambiare). Se servono modifiche, rilancia `analista` con il feedback alla lettera e torna al punto 2.
-5. All'accettazione: aggiungi in fondo a `01-analisi.md` la sezione `## Accettazione` (accettata da Antonio, data, revisione); in `STATO.md` metti `analisi: accettata (rev N, data)`, `fase: 2`. Commit `docs(<NNN>): analisi accettata`.
+5. All'accettazione: aggiungi in fondo a `01-analisi.md` la sezione `## Accettazione` (accettata da Antonio, data, revisione); in `STATO.md` metti `analisi: accettata (rev N, data)`, `fase: 2`. Commit `docs(<NNN>): analisi accettata`. Poi applica il punto di ripartenza.
 
 ### Percorso leggero
-L'analista propone la dimensione. Se propone `piccola`, chiedi conferma all'utente nella stessa domanda di accettazione (opzioni: "Accetto, percorso leggero", "Accetto, percorso completo", "Servono modifiche"). Con il percorso leggero l'accettazione copre anche le sezioni Piano e Architettura del documento: in `STATO.md` metti `percorso: leggero`, `analisi` e `architettura` entrambe `accettata (rev N, data)`, `piano: incluso`, `fase: 4`, e passa direttamente alla fase 4. Se durante l'implementazione il lavoro si rivela più grande (tocca schema, contratti, IPC o dipendenze), fermati e proponi all'utente di passare al percorso completo.
+L'analista propone la dimensione. Se propone `piccola`, chiedi conferma all'utente nella stessa domanda di accettazione (opzioni: "Accetto, percorso leggero", "Accetto, percorso completo", "Servono modifiche"). Con il percorso leggero l'accettazione copre anche le sezioni Piano e Architettura del documento: in `STATO.md` metti `percorso: leggero`, `analisi` e `architettura` entrambe `accettata (rev N, data)`, `piano: incluso`, `fase: 4`, applica il punto di ripartenza e passa alla fase 4. Se durante l'implementazione il lavoro si rivela più grande (tocca schema, contratti, IPC o dipendenze), fermati e proponi all'utente di passare al percorso completo.
 
 ## Fase 2: piano e scomposizione
 
@@ -55,7 +56,7 @@ L'analista propone la dimensione. Se propone `piccola`, chiedi conferma all'uten
 2. Se riporta domande aperte o scelte tra alternative, falle con AskUserQuestion e rilancia `architetto` con le risposte.
 3. Mostra la sintesi: moduli toccati, modifiche a dati/IPC/compiti LLM, nuove dipendenze, rischi, strategia di test. Evidenzia ogni deroga ai principi di `CLAUDE.md`.
 4. Chiedi con AskUserQuestion: "Accetti l'architettura della feature <id> (revisione N)?" con le opzioni "Accetto" e "Servono modifiche". Ripeti finché non accetta.
-5. All'accettazione: sezione `## Accettazione` in `03-architettura.md`; `STATO.md`: `architettura: accettata (rev N, data)`, `fase: 4`, `implementazione: in-corso`. Commit `docs(<NNN>): architettura accettata`. Solo da qui l'hook permette di modificare `src/`, `test/` e `package*.json`.
+5. All'accettazione: sezione `## Accettazione` in `03-architettura.md`; `STATO.md`: `architettura: accettata (rev N, data)`, `fase: 4`, `implementazione: in-corso`. Commit `docs(<NNN>): architettura accettata`. Poi applica il punto di ripartenza. Solo da qui l'hook permette di modificare `src/`, `test/` e `package*.json`.
 
 ## Fase 4: implementazione
 
@@ -69,7 +70,7 @@ L'analista propone la dimensione. Se propone `piccola`, chiedi conferma all'uten
 1. Lancia in parallelo `tester` e `revisore` (id, cartella). Il primo scrive la sezione `## Test` di `05-verifica.md`, il secondo la sezione `## Revisione`.
 2. Se ci sono test che falliscono, criteri di accettazione non coperti o problemi bloccanti della revisione: torna alla fase 4 con un'attività correttiva `F<k>` (aggiungila a `02-piano.md` e alla tabella; raggruppa in un solo `F<k>` le correzioni sugli stessi file) e poi ripeti la fase 5. Dopo 3 cicli senza esito, fermati e chiedi all'utente.
 3. Mostra all'utente l'esito: criteri di accettazione coperti, test eseguiti, osservazioni non bloccanti.
-4. `STATO.md`: `verifica: fatto`, `fase: 6`. Commit `docs(<NNN>): verifica`.
+4. `STATO.md`: `verifica: fatto`, `fase: 6`. Commit `docs(<NNN>): verifica`. Poi applica il punto di ripartenza.
 
 ## Fase 6: apertura della PR
 
