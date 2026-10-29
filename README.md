@@ -41,7 +41,7 @@ Le fasi sono sei:
 5. Test e revisione.
 6. Apertura della PR su GitHub.
 
-I documenti di ogni feature finiscono in `docs/work/<id>/` e nella PR. Un hook impedisce di modificare `src/`, `test/` e `package*.json` prima che l'architettura sia accettata. Per una correzione urgente fuori dal workflow crea il file `.claude/gate-off` e cancellalo dopo.
+I documenti di ogni feature finiscono in `docs/work/<id>/` e nella PR. Un hook impedisce di modificare `src/`, `test/`, `plugin/`, `config/` e `package*.json` prima che l'architettura sia accettata. Per una correzione urgente fuori dal workflow crea il file `.claude/gate-off` e cancellalo dopo.
 
 La configurazione sta in `CLAUDE.md` (regole del progetto), `.claude/skills/` (comandi), `.claude/agents/` (un subagent per fase) e `.claude/settings.json` (permessi e hook).
 

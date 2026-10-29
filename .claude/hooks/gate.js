@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Hook PreToolUse: il codice (src/, test/, package*.json) si modifica solo dalla fase 4
+// Hook PreToolUse: il codice (src/, test/, plugin/, config/, package*.json) si modifica solo dalla fase 4
 // di una feature con architettura accettata. Tutto il resto (docs, .claude, README) è libero.
 // Bypass per correzioni urgenti: l'utente crea il file .claude/gate-off.
 'use strict';
 const fs = require('fs');
 const path = require('path');
 
-const PROTECTED = [/^src\//, /^test\//, /^package(-lock)?\.json$/];
+const PROTECTED = [/^src\//, /^test\//, /^plugin\//, /^config\//, /^package(-lock)?\.json$/];
 
 function deny(reason) {
   process.stdout.write(JSON.stringify({

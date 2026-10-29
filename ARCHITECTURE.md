@@ -93,6 +93,8 @@ Il client è REST, con il Personal Access Token di ogni dipendente, così ognuno
 
 Per ora si avvia da sorgente con `npm install` e `npm start`. In seguito `electron-builder` per gli installer Windows, Mac e Linux, aggiornamenti da un repo interno e firma del codice (account Apple Developer e certificato Windows).
 
+Nel pacchetto finale vanno incluse anche le cartelle `plugin/` e `config/` (fuori da `src/`): contengono i plugin di connessione ed endpoint LLM e la configurazione aziendale (ADR 0003 e 0004). Sono codice e configurazione eseguiti con tutti i permessi, quindi il gate del workflow le protegge come `src/`.
+
 ## Prossimi passi
 
 1. Usare l'app per qualche settimana e raccogliere diari, correzioni e scarti.

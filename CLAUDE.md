@@ -50,7 +50,7 @@ Regole per l'agente principale:
 
 - Le accettazioni delle fasi 1 e 3 le dà solo l'utente, sempre con una domanda esplicita (AskUserQuestion). Non dedurre un'accettazione da un messaggio ambiguo.
 - I subagent non possono fare domande all'utente: le domande aperte che riportano le poni tu.
-- Prima della fase 4 non si modificano `src/`, `test/` e `package*.json`. Un hook (`.claude/hooks/gate.js`) lo impone. Per una correzione urgente fuori dal workflow l'utente può creare il file `.claude/gate-off`, mai tu.
+- Prima della fase 4 non si modificano `src/`, `test/`, `plugin/`, `config/` e `package*.json`. Un hook (`.claude/hooks/gate.js`) lo impone. Per una correzione urgente fuori dal workflow l'utente può creare il file `.claude/gate-off`, mai tu.
 - Mai fare push su `main`, mai `push --force`. Si lavora su `feature/<id>`.
 
 ## Git
