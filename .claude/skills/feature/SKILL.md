@@ -73,6 +73,6 @@ Altrimenti è una nuova richiesta:
 1. Controlla `gh auth status` e che esista il remoto `origin`. Se manca qualcosa, spiega all'utente come sistemarlo (`gh auth login`, `git remote add origin ...`) e fermati.
 2. `git push -u origin feature/<id>`.
 3. Prepara il corpo della PR seguendo `.github/pull_request_template.md`: riassunto, link ai documenti in `docs/work/<id>/`, criteri di accettazione con esito, attività e commit, test eseguiti, rischi e osservazioni della revisione, deviazioni accettate.
-4. `gh pr create --base main --head feature/<id> --title "<titolo> (<NNN>)" --body-file <file temporaneo>`.
+4. Ricava il repository con `git remote get-url origin` (es. `ugraal/diario-lavoro`) e apri la PR in modo non interattivo, indicando sempre repository e branch: `gh pr create --repo <owner>/<repo> --base main --head feature/<id> --title "feat(<NNN>): <titolo>" --body-file <file temporaneo>`. Senza `--repo` e `--head`, `gh` può fermarsi a chiedere dove pushare il branch: in Claude Code non c'è nessuno a rispondere e il comando fallisce. Il titolo segue Conventional Commits.
 5. In `STATO.md` scrivi `pr: <url>` e una riga di Registro; commit e push. Svuota `.claude/feature-attiva`.
 6. Comunica all'utente il link della PR.
