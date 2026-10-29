@@ -6,22 +6,22 @@ Ordine di esecuzione: A17, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A1
 |---|---|---|---|
 | A17 | fatto | 8992933 | gate esteso |
 | A1 | fatto | 8fef36c | contratti e runner test/run.js |
-| A2 | da-fare | | |
-| A3 | da-fare | | |
-| A4 | da-fare | | |
-| A5 | da-fare | | |
-| A6 | da-fare | | |
-| A7 | da-fare | | |
-| A8 | da-fare | | |
-| A9 | da-fare | | |
-| A10 | da-fare | | |
-| A11 | da-fare | | |
-| A12 | da-fare | | |
-| A13 | da-fare | | |
-| A14 | da-fare | | |
-| A15 | da-fare | | |
-| A16 | da-fare | | |
-| A18 | fatto | | verifica finale, vedi sezione sotto |
+| A2 | fatto | bbe720f | |
+| A3 | fatto | 87a2b74 | |
+| A4 | fatto | 949bfdb | |
+| A5 | fatto | beb7670 | |
+| A6 | fatto | 3edaa7a | |
+| A7 | fatto | 72b1dc9 | |
+| A8 | fatto | e330bb3 | |
+| A9 | fatto | c7f5759 | |
+| A10 | fatto | 634b7d0 | |
+| A11 | fatto | d9a5d8e | |
+| A12 | fatto | 60e7616 | |
+| A13 | fatto | c896648 | |
+| A14 | fatto | 9ebb3ad | |
+| A15 | fatto | a89ecd3 | |
+| A16 | fatto | dd8d95a | |
+| A18 | fatto | 6d5bb31 | vedi Verifica finale |
 
 ## Verifica finale A18
 
