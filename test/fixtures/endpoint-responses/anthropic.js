@@ -14,6 +14,12 @@ const USAGE = { input_tokens: 11, output_tokens: 7 };
 
 module.exports = {
   OUTPUT,
+  // Chiave inviata, letta dalla richiesta (init di fetch).
+  keyOf: (init) => {
+    const h = init && init.headers;
+    const v = h && typeof h.get === 'function' ? h.get('authorization') : h && (h.authorization || h.Authorization);
+    return String(v || '').replace(/^Bearer /, '');
+  },
   USAGE,
   // toolName: nome dello strumento richiesto.
   success: (toolName) => json(200, {

@@ -55,10 +55,12 @@ async function main() {
 
       // successo
       {
-        const { ep } = mk(() => fx.success('out'));
+        const { ep, connection } = mk(() => fx.success('out'));
         const r = await ep.runStructured(REQ);
         assert.deepStrictEqual(r.output, fx.OUTPUT);
         assert.deepStrictEqual(r.usage, fx.USAGE);
+        assert.strictEqual(typeof fx.keyOf, 'function', 'la fixture deve avere keyOf(init)');
+        assert.strictEqual(fx.keyOf(connection.calls[0].init), SECRET, 'la chiave inviata deve essere quella dello store');
       }
 
       // chiave mancante: nessuna chiamata
@@ -89,7 +91,7 @@ async function main() {
       // fetch che rifiuta: non raggiungibile
       {
         const { ep } = mk(() => { throw new TypeError('fetch failed'); });
-        await assert.rejects(() => ep.runStructured(REQ), (e) => assertNormalizedError(e) && e.code === 'unreachable');
+        await assert.rejects(() => ep.runStructured(REQ), (e) => assertNormalizedError(e) && e.code === 'unreachable' && !e.message.includes(SECRET));
       }
 
       n++;

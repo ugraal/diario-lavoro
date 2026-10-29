@@ -83,7 +83,7 @@ function registerIpc() {
   handle('settings:myProjects', (list) => { store.setSetting('myProjects', (list || []).map(String)); return true; });
   handle('settings:model', (model) => service.setModel(model));
   handle('secrets:set', (name, value) => {
-    if (!['anthropic', 'asana'].includes(name)) throw new Error('Segreto sconosciuto');
+    if (!secrets.names().includes(name)) throw new Error('Segreto sconosciuto');
     secrets.set(name, value); if (name === 'asana') asana.reset();
     return secrets.status();
   });

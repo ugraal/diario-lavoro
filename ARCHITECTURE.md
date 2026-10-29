@@ -33,20 +33,21 @@ src/
     service.js       logica di dominio (analisi, invio) senza Electron
     plugins.js       factory dei plugin: carica plugin/<tipo>/<nome>/App.js e ne verifica il contratto
     contracts/       interfacce documentate in JSDoc: connection.js (IConnection),
-                     endpoint.js (IEndpoint), secret-store.js (ISecretReader)
+                     endpoint.js (IEndpoint),
+                     secret-store.js (ISecretStore e ISecretReader)
     llm/
       tasks.js       definizione dei compiti: prompt e schema JSON
       config.js      legge e valida config/llm.json, unisce le scelte delle impostazioni
       connect.js     connect(compito): risolve endpoint e modello, chiama l'endpoint, applica clean,
                      scrive sempre llm_runs
       errors.js      errori LLM con codici (no_key, unreachable, ...) e messaggi in italiano
+  shared/util.js     settimana ISO, durate (usato da main e renderer)
+  preload.js
+  renderer/          index.html, app.js, styles.css
 plugin/
   connection/https/App.js      IConnection: HTTPS diretto con timeout e retry
   endpoint/anthropic/App.js    IEndpoint: API Anthropic (tool use forzato)
 config/llm.json    connessioni, endpoint e tabella compito -> { endpoint, modello }
-  shared/util.js     settimana ISO, durate (usato da main e renderer)
-  preload.js
-  renderer/          index.html, app.js, styles.css
 test/                test senza interfaccia: store, analisi con LLM finto, Asana finto, contratti dei plugin
 ```
 

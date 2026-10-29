@@ -31,6 +31,6 @@ Ordine di esecuzione: A17, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A1
 - **`npx electron test/e2e-shot.js`** (SHOT_DIR fuori dal repo): l'app parte, 4 screenshot generati (diario, diario-analisi, impostazioni, progetti). Controllati `impostazioni.png` e `diario-analisi.png`: la nota sulla privacy dice "Il testo del diario viene inviato a: API Anthropic (anthropic) per l'analisi...", cioè mostra l'endpoint effettivo. Il resto delle schermate appare regolare. Non ho a disposizione gli screenshot "di prima" per un confronto pixel per pixel, quindi "uguali a prima" è stato valutato solo a occhio su due immagini; `diario.png` e `progetti.png` non guardati.
 - **Config rotta**: non provata a mano in app, perché `main.js` legge sempre `config/llm.json` dal repo e senza modificare il file reale non c'è modo di sostituirlo. Coperta da `test/service-config.test.js` (verde) e `test/llm-config.test.js`.
 - **Non verificato**: prove con chiave vera (analisi, prova, errori), per scelta: nessuna chiamata reale ad Anthropic.
-- Nessuna correzione necessaria.
+- La verifica A18 non ha rilevato correzioni, ma la revisione di fase 5 ha poi trovato il bloccante su `ping` (corretto con F1) e osservazioni non bloccanti (corrette con F2, tranne 2, 3, 4 e 6, annotate nella PR).
 | F1 | da-fare | | ping come da architettura (bloccante revisione) |
 | F2 | da-fare | | osservazioni non bloccanti |

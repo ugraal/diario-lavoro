@@ -47,7 +47,7 @@ async function boot() {
   if (todays) await openEntry(todays.id, true); else newEntry(true);
   render();
   const s = S.init.secrets;
-  if (S.init.llm && S.init.llm.error) { openSettings(); toast('Configurazione LLM non valida: ' + S.init.llm.error); return; }
+  if (S.init.llm && S.init.llm.error) { openSettings(); toast(S.init.llm.error); return; }
   if (!s.anthropic.set || !s.asana.set) openSettings();
 }
 async function refreshLists() {
@@ -331,7 +331,7 @@ function llmNote(llm) {
   llm = llm || {};
   const resto = 'Tutto il resto (diario, attività, obiettivi) resta solo su questo computer. Su Asana arrivano soltanto titolo, durata e data delle attività che invii tu.';
   let h = '';
-  if (llm.error) h += '<div class="note-box" style="color:var(--warn)">La configurazione dell\'LLM non è valida: ' + esc(llm.error) + ' Le funzioni di analisi non sono disponibili finché non la correggi.</div><div class="note-box">' + resto + '</div>';
+  if (llm.error) h += '<div class="note-box" style="color:var(--warn)">' + esc(llm.error) + ' Le funzioni di analisi non sono disponibili finché non la correggi.</div><div class="note-box">' + resto + '</div>';
   else h += '<div class="note-box">Il testo del diario viene inviato a: ' + esc(llm.label || 'servizio LLM') + (llm.endpoint ? ' (' + esc(llm.endpoint) + ')' : '') + ' per l\'analisi. ' + resto + '</div>';
   (llm.warnings || []).forEach((w) => { h += '<div class="hint" style="color:var(--warn)">Avviso: ' + esc(w) + '</div>'; });
   return h;

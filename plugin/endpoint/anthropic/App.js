@@ -17,8 +17,7 @@ function normalize(e) {
   const msg = String((e && e.message) || e || 'Errore sconosciuto');
   const s = e && e.status;
   if (typeof s !== 'number') {
-    const name = e && e.constructor && e.constructor.name;
-    if (name === 'APIConnectionError' || name === 'APIConnectionTimeoutError') return codeError('unreachable', msg);
+    if (e instanceof Anthropic.APIConnectionError) return codeError('unreachable', msg);
     return codeError('unknown', msg);
   }
   if (s === 401) return codeError('bad_key', msg, s);

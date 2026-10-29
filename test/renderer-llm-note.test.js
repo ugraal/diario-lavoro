@@ -14,7 +14,9 @@ const ok = llmNote({ label: 'API Anthropic', endpoint: 'api.anthropic.com', erro
 assert(ok.includes('API Anthropic') && ok.includes('api.anthropic.com') && ok.includes('attenzione X'));
 const alt = llmNote({ label: 'Modello locale', endpoint: 'http://localhost:1234', error: null, warnings: [] });
 assert(alt.includes('Modello locale') && !alt.includes('Anthropic'));
-const bad = llmNote({ label: '', endpoint: '', error: 'file rotto', warnings: [] });
+const bad = llmNote({ label: '', endpoint: '', error: 'Configurazione LLM non valida (config/llm.json): file rotto', warnings: [] });
+assert.strictEqual(bad.split('Configurazione LLM non valida').length - 1, 1, 'prefisso ripetuto');
+assert(!bad.includes('non è valida'));
 assert(bad.includes('file rotto') && !bad.includes('viene inviato'));
 assert(llmNote(undefined).length > 0);
 assert(/S\.init\.llm\.error/.test(src), 'errore all\'avvio non gestito');
