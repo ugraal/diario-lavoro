@@ -3,8 +3,8 @@
 - id: 001-astrazione-connessione-llm
 - titolo: Astrazione della connessione ai servizi LLM
 - branch: feature/001-astrazione-connessione-llm
-- fase: 1
-- analisi: in-corso
+- fase: 2
+- analisi: accettata (rev 3, 2026-10-29)
 - piano: da-fare
 - architettura: da-fare
 - implementazione: da-fare
@@ -18,3 +18,4 @@ Valori possibili: `da-fare`, `in-corso`, `in-revisione`, `accettata (rev N, AAAA
 | Data | Fase | Evento |
 |---|---|---|
 | 2026-10-29 | 1 | Feature avviata |
+| 2026-10-29 | 1 | Analisi accettata (rev 3) |
