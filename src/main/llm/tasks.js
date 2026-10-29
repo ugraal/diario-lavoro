@@ -130,5 +130,22 @@ const reviewGoals = {
   },
 };
 
-const TASKS = { extractTasks, summarizeDay, reviewGoals };
+// Prova di collegamento: serve a verificare che il modello risponda, senza dati del diario.
+const ping = {
+  name: 'ping',
+  label: 'Prova di collegamento',
+  toolName: 'conferma_collegamento',
+  description: 'Conferma che il collegamento funziona.',
+  maxTokens: 256,
+  schema: {
+    type: 'object',
+    properties: { ok: { type: 'boolean', description: 'Sempre true.' } },
+    required: ['ok'],
+  },
+  system: 'Rispondi sempre in italiano. Compito: conferma che il collegamento funziona chiamando lo strumento con ok = true.',
+  buildUser() { return 'Prova di collegamento: chiama lo strumento con ok = true.'; },
+  clean(out) { return { ok: !!(out && out.ok === true) }; },
+};
+
+const TASKS = { extractTasks, summarizeDay, reviewGoals, ping };
 module.exports = { TASKS };

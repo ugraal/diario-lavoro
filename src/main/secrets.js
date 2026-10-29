@@ -31,6 +31,8 @@ class Secrets {
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
     fs.writeFileSync(this.file, JSON.stringify(this.data, null, 1), { mode: 0o600 });
   }
+  // Nomi dei segreti noti (contratto ISecretStore).
+  names() { return Object.keys(ENV); }
   status() {
     const s = { encryption: this.encryptionAvailable() };
     Object.keys(ENV).forEach((k) => {

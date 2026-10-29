@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "connections": {
+    "diretta": { "plugin": "https", "options": { "timeoutMs": 600000, "maxRetries": 2 } }
+  },
+  "endpoints": {
+    "anthropic": { "plugin": "anthropic", "connection": "diretta", "secret": "anthropic", "options": {} }
+  },
+  "routes": {
+    "extractTasks": { "endpoint": "anthropic", "model": "claude-sonnet-5-5" },
+    "summarizeDay": { "endpoint": "anthropic", "model": "claude-sonnet-5-5" },
+    "reviewGoals": { "endpoint": "anthropic", "model": "claude-sonnet-5-5" }
+  }
+}

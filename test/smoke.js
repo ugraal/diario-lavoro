@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { Store } = require('../src/main/store');
-const { Router } = require('../src/main/llm/router');
+const { createConnector } = require('../src/main/llm/connect');
 const { Asana, pickParent, weekHas } = require('../src/main/asana');
 const { Service } = require('../src/main/service');
 const U = require('../src/shared/util');
@@ -26,7 +26,6 @@ const CFG = require('../src/main/asana-config');
   // LLM finto
   const calls = [];
   const fake = {
-    name: 'fake',
     async runStructured(req) {
       calls.push(req);
       if (req.toolName === 'registra_attivita') return { output: { tasks: [
@@ -42,7 +41,20 @@ const CFG = require('../src/main/asana-config');
       throw new Error('tool inatteso');
     },
   };
-  const router = new Router({ adapters: { anthropic: fake }, store });
+  // L'endpoint finto "a copione" si chiama anthropic come in produzione: llm_runs.provider = 'anthropic'.
+  globalThis.__scriptedEndpoint = (req) => fake.runStructured(req);
+  const route = { endpoint: 'anthropic', model: 'm' };
+  const cfgFile = path.join(dir, 'llm.json');
+  fs.writeFileSync(cfgFile, JSON.stringify({
+    version: 1,
+    connections: { c: { plugin: 'fake', options: {} } },
+    endpoints: { anthropic: { plugin: 'scripted', connection: 'c', secret: 'anthropic', options: {} } },
+    routes: { extractTasks: route, summarizeDay: route, reviewGoals: route },
+  }));
+  const connector = createConnector({
+    configFile: cfgFile, pluginDir: path.join(__dirname, 'fixtures', 'plugin'),
+    secrets: { get: () => 'key', names: () => ['anthropic', 'asana'] }, logRun: (r) => store.logRun(r),
+  });
 
   // Asana finto
   const created = [];
@@ -67,9 +79,8 @@ const CFG = require('../src/main/asana-config');
     if (p === '/tasks/PARENT/subtasks') return ok(created.map((c, i) => ({ gid: 'SUB' + (i + 1), name: c.name })));
     return { ok: false, status: 404, json: async () => ({ errors: [{ message: 'not found ' + p }] }) };
   };
-  const secrets = { get: (n) => (n === 'asana' ? 'tok' : 'key') };
-  const asana = new Asana(() => 'tok', fetchMock);
-  const svc = new Service({ store, router, asana, secrets });
+  const asana = new Asana({ secrets: { get: () => 'tok' }, secretName: 'asana', fetch: fetchMock });
+  const svc = new Service({ store, connector, asana });
 
   // voce + analisi
   const e = store.saveEntry({ date: '2026-10-29', text: 'Tutta la mattina su Diasorin, poi call Stadler. Devo preparare meglio le call.' });
@@ -134,6 +145,8 @@ const CFG = require('../src/main/asana-config');
   const ex = store.exportAll();
   assert.ok(ex.llm_runs.length >= 12 && ex.llm_runs[0].input.user, 'chiamate LLM registrate');
   assert.ok(ex.tasks[0].llm_original, 'proposta originale conservata');
+  assert.ok(ex.llm_runs.every((x) => x.provider === 'anthropic'), 'provider = nome endpoint');
+  assert.strictEqual(ex.llm_runs.filter((x) => x.entry_id === e.id).length >= 3, true);
 
   console.log('OK: tutti i controlli superati');
 })().catch((e) => { console.error(e); process.exit(1); });

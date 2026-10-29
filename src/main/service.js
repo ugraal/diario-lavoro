@@ -3,17 +3,17 @@
 'use strict';
 const { weekOfYmd } = require('../shared/util');
 const { pickParent } = require('./asana');
-const { describeLlmError } = require('./llm/anthropic');
-const { DEFAULT_ROUTES } = require('./llm/router');
+const { describeLlmError } = require('./llm/errors');
 
 class Service {
-  constructor({ store, router, asana, secrets }) {
-    this.store = store; this.router = router; this.asana = asana; this.secrets = secrets;
+  // connector: risultato di createConnector (connect, routes, info)
+  constructor({ store, connector, asana }) {
+    this.store = store; this.connector = connector; this.asana = asana;
     this.analyzing = new Set(); this.sending = new Set();
   }
 
   async prjOptions(opts) {
-    if (!this.secrets.get('asana')) return { source: 'fallback', options: require('./asana-config').prjFallback };
+    if (!this.asana.hasToken()) return { source: 'fallback', options: require('./asana-config').prjFallback };
     return this.asana.prjOptions(opts);
   }
 
@@ -39,9 +39,9 @@ class Service {
       const base = { date: entry.date, text: entry.text };
       const ctx = { entryId: id };
       const [rt, rs, rg] = await Promise.allSettled([
-        this.router.run('extractTasks', Object.assign({ prjOptions: prj.options, myProjects: this.store.getSetting('myProjects', []) }, base), ctx),
-        this.router.run('summarizeDay', base, ctx),
-        this.router.run('reviewGoals', Object.assign({ goals }, base), ctx),
+        this.runTask('extractTasks', Object.assign({ prjOptions: prj.options, myProjects: this.store.getSetting('myProjects', []) }, base), ctx),
+        this.runTask('summarizeDay', base, ctx),
+        this.runTask('reviewGoals', Object.assign({ goals }, base), ctx),
       ]);
       const week = weekOfYmd(entry.date);
       const parts = {};
@@ -101,7 +101,46 @@ class Service {
     } finally { this.sending.delete(id); }
   }
 
-  routes() { return Object.assign({}, DEFAULT_ROUTES, this.store.getSetting('routes', {})); }
+  // connect può lanciare subito (configurazione non valida): l'errore diventa un rifiuto come gli altri.
+  async runTask(name, input, ctx) { return this.connector.connect(name).run(input, ctx); }
+
+  // Prova del modello: compito ping tramite connect (scrive una riga in llm_runs con task 'ping' e senza voce di diario).
+  // Messaggi d'errore in italiano dai codici normalizzati. Risponde true se il modello ha risposto.
+  async testLlm() {
+    try { await this.runTask('ping', {}, {}); return true; } catch (e) { throw new Error(describeLlmError(e)); }
+  }
+
+  // Cambia il modello personale: in settings.routes si scrive solo { model } per ogni compito (ping compreso),
+  // senza endpoint né provider: l'endpoint resta quello del file di configurazione.
+  setModel(model) {
+    model = String(model || '').trim();
+    if (!model) throw new Error('Indica un modello');
+    const bad = this.connector.info().error;
+    if (bad) throw new Error(bad); // con configurazione rotta non scrivo rotte vuote in settings
+    const routes = {};
+    Object.keys(this.routes()).forEach((k) => { routes[k] = { model }; });
+    this.store.setSetting('routes', routes);
+    return model;
+  }
+
+  // Modello e endpoint effettivi, letti dalla configurazione risolta.
+  llmInfo() {
+    const r = this.routes();
+    return Object.assign({ model: (r.extractTasks || {}).model || '' }, this.connector.info());
+  }
+
+  // Stato della configurazione LLM per l'avvio: non lancia mai, anche con file mancante o non valido.
+  // { label, endpoint, error (messaggio con file e voce, o null), warnings, model }
+  llmStatus() {
+    try {
+      const i = this.connector.info();
+      return { label: i.label || '', endpoint: i.endpoint || '', error: i.error || null, warnings: i.warnings || [], model: this.llmInfo().model };
+    } catch (e) {
+      return { label: '', endpoint: '', error: describeLlmError(e), warnings: [], model: '' };
+    }
+  }
+
+  routes() { return this.connector.routes(); }
 }
 
 module.exports = { Service };

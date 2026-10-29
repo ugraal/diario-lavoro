@@ -12,3 +12,6 @@ Il codice chiama compiti con un nome (`extractTasks`, `summarizeDay`, `reviewGoa
 - Aggiungere un modello locale significa scrivere un adapter e cambiare la tabella, senza toccare il resto.
 - Più chiamate piccole invece di una grande: più latenza e qualche token in più, in cambio di compiti spostabili uno per uno.
 - `llm_runs` e `tasks.llm_original` formano il dataset per misurare i modelli locali prima di attivarli.
+
+## Nota successiva
+Questo ADR resta valido per i compiti con nome, schema e `clean`, e per `llm_runs`. Il `Router` e `AnthropicAdapter` però sono stati sostituiti da `connect()` e da plugin di connessione ed endpoint: vedi ADR 0003 e ADR 0004. Da qui in poi "router" indica solo un eventuale servizio esterno raggiunto come endpoint; nell'app non esiste un router interno.

@@ -4,13 +4,13 @@ const path = require('path');
 const fs = require('fs');
 const { Store } = require('./store');
 const { Secrets } = require('./secrets');
+const { readOnlyView } = require('./contracts/secret-store');
 const { Asana } = require('./asana');
-const { Router } = require('./llm/router');
-const { AnthropicAdapter, describeLlmError } = require('./llm/anthropic');
+const { createConnector } = require('./llm/connect');
 const { Service } = require('./service');
 const { weekLabel } = require('../shared/util');
 
-let win, store, secrets, asana, service, anthropic;
+let win, store, secrets, asana, service;
 
 function createWindow() {
   win = new BrowserWindow({
@@ -39,10 +39,15 @@ function goalsWithUpdates() {
 }
 
 function registerIpc() {
-  handle('init', () => ({
-    dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
-    myProjects: store.getSetting('myProjects', []), model: service.routes().extractTasks.model, secrets: secrets.status(),
-  }));
+  // Con configurazione LLM non valida init risponde lo stesso: llm.error porta il messaggio per il renderer.
+  handle('init', () => {
+    const llm = service.llmStatus();
+    return {
+      dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
+      myProjects: store.getSetting('myProjects', []), model: llm.model, secrets: secrets.status(),
+      llm: { label: llm.label, endpoint: llm.endpoint, error: llm.error, warnings: llm.warnings },
+    };
+  });
 
   handle('entries:list', () => store.listEntries());
   handle('entries:detail', (id) => ({ entry: store.getEntry(id), tasks: store.tasksOfEntry(id), updates: store.updatesOfEntry(id) }));
@@ -76,23 +81,14 @@ function registerIpc() {
 
   handle('prj:options', (force) => service.prjOptions({ force: !!force }));
   handle('settings:myProjects', (list) => { store.setSetting('myProjects', (list || []).map(String)); return true; });
-  handle('settings:model', (model) => {
-    model = String(model || '').trim();
-    if (!model) throw new Error('Indica un modello');
-    const routes = {}; Object.keys(service.routes()).forEach((k) => { routes[k] = { provider: 'anthropic', model }; });
-    store.setSetting('routes', routes);
-    return model;
-  });
+  handle('settings:model', (model) => service.setModel(model));
   handle('secrets:set', (name, value) => {
-    if (!['anthropic', 'asana'].includes(name)) throw new Error('Segreto sconosciuto');
+    if (!secrets.names().includes(name)) throw new Error('Segreto sconosciuto');
     secrets.set(name, value); if (name === 'asana') asana.reset();
     return secrets.status();
   });
   handle('asana:test', async () => { asana.reset(); const me = await asana.me(); return me.name || me.email || me.gid; });
-  handle('llm:test', async () => {
-    try { await anthropic.ping(service.routes().extractTasks.model); return true; }
-    catch (e) { throw new Error(describeLlmError(e)); }
-  });
+  handle('llm:test', () => service.testLlm());
   handle('data:export', async () => {
     const r = await dialog.showSaveDialog(win, { title: 'Esporta i dati', defaultPath: 'diario-lavoro-' + new Date().toISOString().slice(0, 10) + '.json', filters: [{ name: 'JSON', extensions: ['json'] }] });
     if (r.canceled || !r.filePath) return null;
@@ -106,10 +102,13 @@ app.whenReady().then(async () => {
   const dir = app.getPath('userData');
   store = await Store.open(path.join(dir, 'diario.sqlite'));
   secrets = new Secrets(dir, safeStorage);
-  asana = new Asana(() => secrets.get('asana'));
-  anthropic = new AnthropicAdapter(() => secrets.get('anthropic'));
-  const router = new Router({ adapters: { anthropic }, store, getRoutes: () => store.getSetting('routes', {}) });
-  service = new Service({ store, router, asana, secrets });
+  asana = new Asana({ secrets: readOnlyView(secrets, ['asana']), secretName: 'asana' });
+  const root = path.join(__dirname, '..', '..');
+  const connector = createConnector({
+    configFile: path.join(root, 'config', 'llm.json'), pluginDir: path.join(root, 'plugin'), secrets,
+    logRun: (r) => store.logRun(r), getSettingsRoutes: () => store.getSetting('routes', {}),
+  });
+  service = new Service({ store, connector, asana });
   registerIpc();
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

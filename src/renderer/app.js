@@ -47,6 +47,7 @@ async function boot() {
   if (todays) await openEntry(todays.id, true); else newEntry(true);
   render();
   const s = S.init.secrets;
+  if (S.init.llm && S.init.llm.error) { openSettings(); toast(S.init.llm.error); return; }
   if (!s.anthropic.set || !s.asana.set) openSettings();
 }
 async function refreshLists() {
@@ -325,6 +326,16 @@ function roRow(t) {
 }
 
 /* --- impostazioni --- */
+// Nota sulla privacy: mostra l'endpoint effettivo letto da init.llm { label, endpoint, error, warnings }.
+function llmNote(llm) {
+  llm = llm || {};
+  const resto = 'Tutto il resto (diario, attività, obiettivi) resta solo su questo computer. Su Asana arrivano soltanto titolo, durata e data delle attività che invii tu.';
+  let h = '';
+  if (llm.error) h += '<div class="note-box" style="color:var(--warn)">' + esc(llm.error) + ' Le funzioni di analisi non sono disponibili finché non la correggi.</div><div class="note-box">' + resto + '</div>';
+  else h += '<div class="note-box">Il testo del diario viene inviato a: ' + esc(llm.label || 'servizio LLM') + (llm.endpoint ? ' (' + esc(llm.endpoint) + ')' : '') + ' per l\'analisi. ' + resto + '</div>';
+  (llm.warnings || []).forEach((w) => { h += '<div class="hint" style="color:var(--warn)">Avviso: ' + esc(w) + '</div>'; });
+  return h;
+}
 function openSettings() { S.modal = { kind: 'settings', msg: {} }; renderModal(); }
 function renderModal() {
   const r = document.getElementById('modal-root');
@@ -340,7 +351,7 @@ function renderModal() {
     (s.encryption ? '' : '<div class="note-box" style="color:var(--warn)">Il portachiavi del sistema non è disponibile: le chiavi vengono salvate senza cifratura nella cartella dati.</div>') +
     '<h3>Claude</h3>' + sec('anthropic', 'API key Anthropic', 'Una chiave dell\'organizzazione Console collegata al piano Team di Statwolf (Console → API keys).') +
     '<div class="field"><label for="mdl">Modello</label><div class="row"><input class="in" id="mdl" value="' + esc(S.init.model) + '"><button class="btn" data-act="model-save">Salva</button></div></div>' +
-    '<div class="note-box">Il testo del diario viene inviato all\'API Anthropic per l\'analisi; tutto il resto (diario, attività, obiettivi) resta solo su questo computer. Su Asana arrivano soltanto titolo, durata e data delle attività che invii tu.</div>' +
+    llmNote(S.init.llm) +
     '<h3>Asana</h3>' + sec('asana', 'Personal Access Token Asana', 'Asana → Impostazioni → App → Gestisci app sviluppatore → Crea un nuovo token.') +
     '<h3>I miei progetti</h3><p class="hint">Vengono messi in cima agli elenchi e suggeriti per primi all\'analisi. Elenco PRJ: ' + (S.prj.source === 'asana' ? 'letto da Asana' : 'di riserva (collega Asana per aggiornarlo)') + '.</p>' +
     '<div class="grid-prj">' + S.prj.options.slice().sort((a, b) => a.name.localeCompare(b.name, 'it')).map((o) => '<label class="chk"><input type="checkbox" data-mine="' + esc(o.gid) + '"' + (mine.has(o.gid) ? ' checked' : '') + '>' + esc(o.name) + '</label>').join('') + '</div>' +
