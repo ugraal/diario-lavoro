@@ -4,8 +4,8 @@ Ordine di esecuzione: A17, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A1
 
 | Attività | Stato | Commit | Note |
 |---|---|---|---|
-| A17 | da-fare | | |
-| A1 | da-fare | | |
+| A17 | fatto | 8992933 | gate esteso |
+| A1 | fatto | 8fef36c | contratti e runner test/run.js |
 | A2 | da-fare | | |
 | A3 | da-fare | | |
 | A4 | da-fare | | |
