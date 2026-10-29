@@ -134,16 +134,16 @@ const reviewGoals = {
 const ping = {
   name: 'ping',
   label: 'Prova di collegamento',
-  toolName: 'rispondi_ok',
+  toolName: 'conferma_collegamento',
   description: 'Conferma che il collegamento funziona.',
-  maxTokens: 64,
+  maxTokens: 256,
   schema: {
     type: 'object',
     properties: { ok: { type: 'boolean', description: 'Sempre true.' } },
     required: ['ok'],
   },
   system: 'Rispondi sempre in italiano. Compito: conferma che il collegamento funziona chiamando lo strumento con ok = true.',
-  buildUser() { return 'Prova di collegamento.'; },
+  buildUser() { return 'Prova di collegamento: chiama lo strumento con ok = true.'; },
   clean(out) { return { ok: !!(out && out.ok === true) }; },
 };
 

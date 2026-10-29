@@ -13,8 +13,9 @@ assert.strictEqual(p.schema.type, 'object');
 assert.strictEqual(p.schema.properties.ok.type, 'boolean');
 assert.deepStrictEqual(p.schema.required, ['ok']);
 
-// maxTokens basso.
-assert.ok(Number.isInteger(p.maxTokens) && p.maxTokens > 0 && p.maxTokens <= 100);
+// maxTokens come da architettura (margine contro no_output).
+assert.ok(Number.isInteger(p.maxTokens) && p.maxTokens === 256);
+assert.strictEqual(p.toolName, 'conferma_collegamento');
 
 // clean: output valido e output rotto.
 assert.deepStrictEqual(p.clean({ ok: true }), { ok: true });
