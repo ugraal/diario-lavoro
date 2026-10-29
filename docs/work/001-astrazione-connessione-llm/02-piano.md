@@ -166,3 +166,8 @@ Riferimento: `01-analisi.md` rev 3 (accettata). Aggiornato il 2026-10-29 con le 
 - Prova (`ping`) con endpoint e modello di default uguali a `extractTasks`: voce propria in `routes` oppure derivata.
 - Ordine di A9 e A12 se conviene unire le modifiche di `service.js` per evitare conflitti.
 - Estensione del gate a `plugin/` e `config/` (A17). Risolto in `03-architettura.md` rev 2: si estende.
+
+## Attività correttive (fase 5, ciclo 1)
+
+- **F1** · `ping` come da architettura rev 2: `maxTokens: 256`, `toolName` e testo di `buildUser` come previsti in `03-architettura.md`; il test `test/tasks.test.js` deve accettare il valore accettato; correggere la riga CA3 della sezione Test di `05-verifica.md`. Bloccante della revisione.
+- **F2** · Osservazioni non bloccanti della revisione da sistemare ora: prefisso "Configurazione LLM non valida" ripetuto (renderer), `instanceof` al posto di `constructor.name` per gli errori di rete (plugin anthropic), `secrets:set` con `secrets.names()`, controllo "chiave dallo store" nel test di contratto generico `IEndpoint`, albero dei file di `ARCHITECTURE.md`, nota "Nessuna correzione necessaria" in `04-implementazione.md`. Le altre (nota privacy solo per extractTasks, opzioni sconosciute della connessione `https`, D3 incompleta, testo `no_key` in `llm_runs.error`) restano annotate nella PR.
