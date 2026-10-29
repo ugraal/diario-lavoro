@@ -28,6 +28,9 @@ Modifiche allo schema SQLite e migrazione dei dati esistenti (i database dei col
 ## Interfacce
 Nuovi canali IPC (nome, input, output, errori). Nuovi compiti LLM (nome, input, schema di output, funzione clean, provider e modello di default nel router). Nuove chiamate Asana.
 
+## Astrazioni
+Per ogni dipendenza critica toccata (principio 7 di CLAUDE.md): nome dell'interfaccia, metodi con input, output ed errori, implementazioni previste oggi, come si aggiunge un'implementazione domani, come si sceglie da configurazione, test di contratto. Se una dipendenza critica oggi è usata direttamente, la porti dietro un'interfaccia in questa feature o dichiari perché no. Niente interfacce per ciò che non è critico.
+
 ## Alternative considerate
 Almeno una alternativa seria per ogni scelta non ovvia, con il motivo dello scarto.
 

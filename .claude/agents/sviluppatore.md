@@ -16,6 +16,8 @@ Procedi così:
 3. Esegui `npm test`. Se fallisce, correggi. Non disattivare né indebolire test esistenti per farli passare.
 4. Fai un commit con solo i file dell'attività: `feat(<NNN>): A<k> <descrizione breve>` (o `fix(<NNN>): F<k> ...` per le correttive).
 
+Le dipendenze critiche (principio 7 di CLAUDE.md) si usano solo attraverso le loro interfacce: non importare SDK o client di fornitori fuori dalla loro implementazione. Ogni nuova implementazione di un'interfaccia deve passare il suo test di contratto.
+
 Fermati senza committare e riporta all'agente principale se ti accorgi che serve **deviare dall'architettura accettata**: una dipendenza non prevista, un cambio di schema dati o un canale IPC non previsti, una violazione dei principi. Descrivi la deviazione, perché serve e un'alternativa che la eviti, se c'è.
 
 Non fare mai push, non cambiare branch, non toccare i documenti di analisi e architettura.
