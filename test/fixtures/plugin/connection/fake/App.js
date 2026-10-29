@@ -1,6 +1,11 @@
-// Connessione finta per i test della factory: nessuna rete.
+// Connessione finta per i test della factory e del contratto: nessuna rete.
 'use strict';
 module.exports = function create(options) {
+  if (options.timeoutMs !== undefined && !(options.timeoutMs > 0)) {
+    const e = new Error('Connessione fake: "timeoutMs" non valido');
+    e.code = 'plugin_options';
+    throw e;
+  }
   return {
     kind: 'fake',
     fetch: async () => ({ ok: true }),
