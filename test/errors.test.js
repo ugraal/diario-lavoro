@@ -26,7 +26,7 @@ assert.strictEqual(describeLlmError(mk('unknown', 'x'.repeat(300))), 'Errore LLM
 assert.strictEqual(describeLlmError(mk('bad_request', 'richiesta errata')), 'Errore LLM: richiesta errata');
 // Etichette dell'endpoint effettivo
 assert.strictEqual(describeLlmError(Object.assign(new Error('x'), { llm: { code: 'bad_key', info: { keyLabel: 'Chiave locale' } } })), 'Chiave locale non valida');
-assert.strictEqual(describeLlmError(Object.assign(new Error('x'), { llm: { code: 'unavailable', info: { service: 'Router' } } })), 'Router non risponde, riprova tra poco');
+assert.strictEqual(describeLlmError(Object.assign(new Error('x'), { llm: { code: 'unavailable', info: { service: 'Servizio interno' } } })), 'Servizio interno non risponde, riprova tra poco');
 // Configurazione non valida e senza dettagli
 assert.strictEqual(describeLlmError(Object.assign(new Error('Configurazione LLM non valida (f): x'), { code: 'config' })), 'Configurazione LLM non valida (f): x');
 assert.strictEqual(describeLlmError(null), 'Errore sconosciuto');

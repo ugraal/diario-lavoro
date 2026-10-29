@@ -1,11 +1,10 @@
-// Plugin endpoint anthropic: richiesta identica a quella dell'AnthropicAdapter, chiave, baseURL, retry.
+// Plugin endpoint anthropic: richiesta identica a quella attesa, chiave, baseURL, retry.
 // Usa l'SDK vero con il fetch finto della connessione (A6, CA1).
 'use strict';
 const assert = require('assert');
 const path = require('path');
 const { createEndpoint } = require('../src/main/plugins');
 const fx = require('./fixtures/endpoint-responses/anthropic');
-const { AnthropicAdapter } = require('../src/main/llm/anthropic');
 
 const base = path.join(__dirname, '..', 'plugin');
 const REQ = {
@@ -44,18 +43,15 @@ async function main() {
   assert.strictEqual(header(c0.init, 'authorization'), 'Bearer sk-uno', 'la chiave è quella dello store, non il token di ambiente');
   const body = JSON.parse(c0.init.body);
 
-  // 2. stesso corpo che produce oggi AnthropicAdapter
-  const conn2 = mkConn(() => fx.success('save_tasks'));
-  const prevFetch = globalThis.fetch;
-  globalThis.fetch = conn2.fetch;
-  let oldBody;
-  try {
-    delete process.env.ANTHROPIC_BASE_URL;
-    delete process.env.ANTHROPIC_AUTH_TOKEN;
-    await new AnthropicAdapter(() => 'sk-uno').runStructured(REQ);
-    oldBody = JSON.parse(conn2.calls[0].init.body);
-  } finally { globalThis.fetch = prevFetch; }
-  assert.deepStrictEqual(body, oldBody);
+  // 2. corpo identico a quello atteso, fissato qui (era quello dell'adapter storico)
+  assert.deepStrictEqual(body, {
+    model: 'claude-sonnet-5-5',
+    max_tokens: 4096,
+    system: 'Sei un assistente',
+    messages: [{ role: 'user', content: 'Oggi ho lavorato' }],
+    tools: [{ name: 'save_tasks', description: 'Salva', input_schema: { type: 'object', properties: { a: { type: 'string' } } } }],
+    tool_choice: { type: 'tool', name: 'save_tasks' },
+  });
   assert.deepStrictEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'system', 'tool_choice', 'tools']);
   assert.strictEqual(body.max_tokens, 4096);
   assert.deepStrictEqual(body.tool_choice, { type: 'tool', name: 'save_tasks' });
