@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+// Hook git commit-msg: impone Conventional Commits 1.0.0 (https://www.conventionalcommits.org/it/v1.0.0/).
+// Attivazione, una volta per clone:  git config core.hooksPath .githooks
+'use strict';
+const fs = require('fs');
+
+const TYPES = ['feat', 'fix', 'docs', 'test', 'refactor', 'perf', 'build', 'ci', 'chore', 'style', 'revert'];
+const file = process.argv[2];
+const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/).filter((l) => !l.startsWith('#'));
+const header = (lines[0] || '').trim();
+
+// Messaggi generati da git o da GitHub: si lasciano passare.
+if (/^(Merge|Revert ") /.test(header) || /^(fixup|squash|amend)! /.test(header)) process.exit(0);
+
+const re = new RegExp('^(' + TYPES.join('|') + ')(\\([a-z0-9-]+\\))?(!)?: (\\S.*)$');
+const m = header.match(re);
+const errors = [];
+if (!m) errors.push('La prima riga deve essere "<tipo>(<ambito>): <descrizione>", con tipo tra: ' + TYPES.join(', ') + '. L\'ambito è facoltativo (per le feature del workflow è il numero, es. 001).');
+else {
+  if (/\.$/.test(m[4])) errors.push('La descrizione non termina con il punto.');
+  if (/^[A-ZÀ-Ý]/.test(m[4]) && !/^[A-Z0-9]{2,}/.test(m[4])) errors.push('La descrizione inizia con la minuscola (salvo sigle, es. "A3", "IPC").');
+}
+if (header.length > 72) errors.push('La prima riga supera 72 caratteri (' + header.length + ').');
+if (lines.length > 1 && lines[1].trim() !== '') errors.push('Lascia una riga vuota tra la prima riga e il corpo.');
+
+if (errors.length) {
+  console.error('\nMessaggio di commit non conforme a Conventional Commits:\n  ' + header + '\n\n- ' + errors.join('\n- ') +
+    '\n\nEsempi:\n  feat(001): A3 factory dei plugin di connessione\n  fix: gestione del timeout verso Asana\n  docs(001): architettura accettata\n  feat(002)!: nuovo schema del database\n');
+  process.exit(1);
+}

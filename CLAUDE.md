@@ -55,6 +55,12 @@ Regole per l'agente principale:
 
 ## Git
 
-- Branch: `feature/<NNN>-<slug>`, creato all'inizio della fase 1.
-- Commit in italiano, stile conventional: `docs(001): analisi accettata`, `feat(001): A2 estrazione durate`, `test(001): ...`, `fix(001): ...`.
+- Branch: `feature/<NNN>-<slug>`, creato all'inizio della fase 1. Per lavori fuori dal workflow: `chore/<slug>`, `fix/<slug>`.
+- **I messaggi di commit seguono [Conventional Commits 1.0.0](https://www.conventionalcommits.org/it/v1.0.0/).** È un vincolo, non un suggerimento, e il hook `.githooks/commit-msg` lo controlla (attivazione una volta per clone: `git config core.hooksPath .githooks`).
+  - Prima riga: `<tipo>(<ambito>): <descrizione>`, al massimo 72 caratteri, descrizione in italiano, all'imperativo o nominale, minuscola, senza punto finale.
+  - Tipi ammessi: `feat` (nuova funzionalità), `fix` (correzione), `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `style`, `revert`.
+  - Ambito: per il workflow è il numero della feature (`feat(001): A3 factory dei plugin`); fuori dal workflow è facoltativo.
+  - Modifiche incompatibili (schema dati, contratti `IConnection`/`IEndpoint`/`ISecretStore`, canali IPC): `!` dopo l'ambito (`feat(002)!: ...`) e nota `BREAKING CHANGE: ...` nel corpo.
+  - Corpo facoltativo, separato da una riga vuota: il perché della modifica.
+- Anche il titolo della PR segue la stessa convenzione, perché in caso di squash diventa il messaggio del commit su `main`.
 - La PR usa `.github/pull_request_template.md` e rimanda ai documenti in `docs/work/<id>/`.
