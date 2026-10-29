@@ -1,17 +1,17 @@
 # Verifica: Astrazione della connessione ai servizi LLM (001-astrazione-connessione-llm)
 
 ## Test
-Data: 2026-10-29 · Esito npm test: verde (15/15 file di test ok)
+Data: 2026-10-29 · Esito npm test: verde (15/15 file di test ok, exit 0) · Ciclo 2, dopo le correzioni F1 e F2
 
-Eseguiti: `npm test` (nessuna rete, nessuna chiamata reale ad Anthropic) e `npx electron test/e2e-shot.js` con `SHOT_DIR` in una cartella temporanea (esito `shots ok []`, quattro screenshot: diario, diario-analisi, progetti, impostazioni; guardato `impostazioni.png`). Controlli con grep eseguiti dal repository. Note di 03-architettura.md rev 2 (N1-N4) applicate: `ping` eredita la rotta di `extractTasks`, `settings:model` scrive solo `{ model }`, `unreachable` mostra `Errore LLM: <message>`, gate esteso a `plugin/` e `config/`.
+Eseguiti nel ciclo 2: `npm test` (nessuna rete, nessuna chiamata reale ad Anthropic) e `npx electron test/e2e-shot.js` con `SHOT_DIR` in una cartella temporanea fuori dal repo (esito `shots ok []`, quattro screenshot: diario, diario-analisi, progetti, impostazioni; riguardato `impostazioni.png`). Ricontrollato nel codice il compito `ping` dopo F1: `src/main/llm/tasks.js` ha `maxTokens: 256` (riga 139) e `toolName: 'conferma_collegamento'` (riga 137), testo "Prova di collegamento: chiama lo strumento con ok = true."; `test/tasks.test.js` righe 17-18 impone `maxTokens === 256` e il `toolName`, quindi test e architettura sono allineati. Controlli con grep eseguiti dal repository. Note di 03-architettura.md rev 2 (N1-N4) applicate: `ping` eredita la rotta di `extractTasks`, `settings:model` scrive solo `{ model }`, `unreachable` mostra `Errore LLM: <message>`, gate esteso a `plugin/` e `config/`.
 
 | Criterio | Come è verificato | Esito |
 |---|---|---|
 | CA1 | `test/anthropic-endpoint.test.js`: corpo JSON della richiesta (`model`, `max_tokens` 4096, `system`, `messages`, `tools`, `tool_choice`, solo queste 6 chiavi), chiave dallo store, retry. `test/connect.test.js` e `test/smoke.js`: una riga in `llm_runs` per chiamata con `provider` = nome endpoint. Chiave vera: verifica manuale | ok (automatico). Con chiave vera: da fare a mano |
 | CA2 | `test/llm-config.test.js`: formato `provider` letto come `endpoint`, nessuna modifica dell'oggetto in memoria; `test/service-llm.test.js`: con `routes` nel vecchio formato `{ provider, model: 'x' }` la prova usa `x` e la riga ha `model = 'x'`; `test/service-config.test.js`: `settings` non toccati | ok (con store finto in memoria) |
-| CA3 | `test/service-llm.test.js`: chiave valida, mancante e non valida, messaggi di oggi, riga `ping` con `entry_id` nullo ed `error` valorizzato; `test/tasks.test.js`: schema `{ ok }`, `clean`, `maxTokens` 256. Pulsante "Prova" nell'app con chiave vera: manuale | ok (automatico). Con UI e chiave vera: da fare a mano |
+| CA3 | `test/service-llm.test.js`: chiave valida, mancante e non valida, messaggi di oggi, riga `ping` con `entry_id` nullo ed `error` valorizzato; `test/tasks.test.js`: schema `{ ok }`, `clean`, `maxTokens === 256` e `toolName` 'conferma_collegamento' (come da architettura, dopo F1). Pulsante "Prova" nell'app con chiave vera: manuale | ok (automatico). Con UI e chiave vera: da fare a mano |
 | CA4 | `test/errors.test.js` (ogni codice, testi uguali a oggi, `unreachable` come N3); `test/endpoints.test.js` (401, 403, 404, 429, 500, 529, senza output). grep: `src/main/service.js` importa solo `./llm/errors`, nessuna occorrenza di "anthropic" | ok |
-| CA5 | grep: `@anthropic-ai/sdk` solo in `plugin/endpoint/anthropic/App.js` (nessuna occorrenza in `src/` e `test/`); `Router` e `llm/router` assenti in `src/` e `test/` | ok |
+| CA5 | grep: `@anthropic-ai/sdk` solo in `plugin/endpoint/anthropic/App.js` (nessuna occorrenza in `src/` e `test/`); `Router` e `llm/router` assenti in `src/` e `test/` (restano solo la parola "router" come nome di endpoint di esempio in `test/llm-config.test.js` e un commento in `src/main/contracts/endpoint.js` che cita l'SDK, senza import) | ok |
 | CA6 | `test/connections.test.js` + `test/contract/connection.js` su ogni cartella di `plugin/connection/` e sulla fixture `fake`, senza rete (delega di `https` a `globalThis.fetch` sostituito) | ok |
 | CA7 | `test/endpoints.test.js` + `test/contract/endpoint.js` su ogni cartella di `plugin/endpoint/` con connessione e segreti finti, fixture `test/fixtures/endpoint-responses/anthropic.js`; la chiave usata è quella dello store (`Authorization: Bearer`, N-A6) | ok |
 | CA8 | `test/secrets.test.js` + `test/contract/secret-store.js` su `Secrets` (valore salvato, `''` se assente, precedenza env per `anthropic` e `asana`, `set('')`, `status` senza valore, `readOnlyView`) | ok |
@@ -29,7 +29,8 @@ Criteri coperti: 17/17 con prova automatica o controllo con grep. Tre criteri (C
 
 ### Non verificato
 - Nessuna chiamata reale ad Anthropic: la richiesta e la chiave (header `Authorization: Bearer` dell'SDK 1.3.0) sono provate solo con `fetch` finto. Da fare a mano con chiave vera: analisi di una voce e confronto con le righe di `llm_runs` (CA1); prova con chiave valida, cancellata e sbagliata (CA3); modello inesistente nelle Impostazioni (atteso "Modello non trovato", CA4).
-- `ping` con `max_tokens` 256 contro il servizio reale: non provato (rischio `no_output` annotato in 03-architettura.md).
+- `ping` con `max_tokens` 256 contro il servizio reale: non provato (rischio `no_output` annotato in 03-architettura.md). Il valore è ora quello dell'architettura, ma solo la prova con chiave vera può confermare che il modello risponda con `tool_use` completo.
+- Confronto con la riga del revisore sul bloccante precedente: il difetto su `ping` (64 token, nome e testo diversi) è chiuso nel codice e nel test; l'esito finale spetta al revisore.
 - Configurazione rotta nell'app avviata: provata solo a livello di `Service` e `createConnector`, non in Electron. Passi manuali: rinominare `config/llm.json`, `npm start`, controllare l'avviso all'avvio e nelle Impostazioni, salvare una voce di diario, inviare un'attività ad Asana, poi ripristinare il file.
 - CA2: il test usa uno store finto in memoria, non il vero SQLite; che `routes` su disco non venga riscritto si deduce dal codice (nessuna scrittura in lettura) e da `service-config.test.js`.
 - Prova di Asana e invio reale con token vero: non fatti.
@@ -37,17 +38,39 @@ Criteri coperti: 17/17 con prova automatica o controllo con grep. Tre criteri (C
 - Estensione del gate (`.claude/hooks/gate.js` copre `plugin/` e `config/`): vista nel codice, non provata con un'esecuzione.
 
 ### Problemi trovati
-Nessuno. Nessun test fallito. Nessun criterio senza copertura automatica o controllo con grep.
+Nessuno nel ciclo 2. Nessun test fallito. Nessun criterio senza copertura automatica o controllo con grep. Il punto di CA3 che nel ciclo 1 non corrispondeva al codice (`maxTokens`) ora coincide.
 
 ## Revisione
-Data: 2026-10-29 · Commit revisionati: 8fef36c..83211fe (diff `8992933..HEAD`, codice, test e documenti)
+Data: 2026-10-29 · Commit revisionati: 8fef36c..19584a5 (ciclo 1: diff `8992933..83211fe`; ciclo 2: diff `83211fe..19584a5`, correzioni F1 `0e19c56` e F2 `f745f6e`)
 
 Riferimenti: `03-architettura.md` rev 2 (accettata, deroghe D1-D5), ADR 0004, principi di `CLAUDE.md`.
 
+### Esito del ciclo 2
+- **Bloccante `ping`: risolto.** `src/main/llm/tasks.js:134-148` ha ora `toolName: 'conferma_collegamento'`, `maxTokens: 256` e `buildUser` = `'Prova di collegamento: chiama lo strumento con ok = true.'`, come in `03-architettura.md` (righe 114-118). `test/tasks.test.js:17-18` impone `maxTokens === 256` e il `toolName`. La riga CA3 della sezione Test riporta 256 e ora corrisponde al codice.
+- **Osservazione 1 (prefisso ripetuto): risolta.** `src/renderer/app.js:50` e `:334` mostrano solo `llm.error`; tutti gli errori di caricamento passano da `configError` (`src/main/llm/config.js:18`, `:123`, `:133`) e hanno quindi già il prefisso. `test/renderer-llm-note.test.js:17-19` controlla che compaia una volta sola.
+- **Osservazione 5 (`constructor.name`): risolta.** `plugin/endpoint/anthropic/App.js:20` usa `e instanceof Anthropic.APIConnectionError`; nell'SDK 1.3.0 `APIConnectionTimeoutError` estende `APIConnectionError` (`core/error.js:89`), quindi il timeout resta `unreachable`. Il caso `fetch failed` del contratto passa.
+- **Osservazione 7 (`secrets:set`): risolta.** `src/main/main.js:86` usa `secrets.names()` (`src/main/secrets.js:35`, stesso elenco `anthropic`, `asana`).
+- **Osservazione 8 (chiave nel contratto `IEndpoint`): risolta.** `test/endpoints.test.js:62-63` richiede `fx.keyOf(init)` a ogni fixture e confronta la chiave inviata con quella dello store; `:94` verifica che il segreto non compaia nel messaggio di `unreachable`. `keyOf` è in `test/fixtures/endpoint-responses/anthropic.js:18-22`.
+- **Osservazione 9 (albero di `ARCHITECTURE.md`): risolta.** `shared/util.js`, `preload.js` e `renderer/` sono tornati sotto `src/` (righe 44-46) e `secret-store.js` è descritto come `ISecretStore e ISecretReader` (riga 37).
+- **Osservazione 10 (`04-implementazione.md`): risolta nel contenuto** (riga 34), con un difetto di forma annotato sotto.
+- **Osservazioni 2, 3, 4, 6: restano non bloccanti** e sono annotate in `02-piano.md` (attività correttive, voce F2) come da riportare nella PR. Sono ripetute sotto con i riferimenti aggiornati.
+- **Regressioni:** nessuna. Il diff `83211fe..HEAD` tocca solo i punti sopra; `npm test` verde (15/15). Nessun nuovo canale IPC, nessuna nuova dipendenza, nessun uso dell'SDK fuori dal plugin.
+
 ### Bloccanti
+Nessuno.
+
+Storico del ciclo 1 (risolto con F1):
 - [src/main/llm/tasks.js:134-147, test/tasks.test.js:17] **Il compito `ping` si discosta dall'architettura accettata senza che la deviazione sia dichiarata.** L'architettura (sezione Interfacce, "Nuovo compito LLM `ping`", e tabella Rischi) fissa `maxTokens: 256` "come margine, perché una chiamata `tool_use` tagliata da `max_tokens` darebbe `no_output`", `toolName: 'conferma_collegamento'` e `buildUser` = `'Prova di collegamento: chiama lo strumento con ok = true.'`. Il codice ha `maxTokens: 64`, `toolName: 'rispondi_ok'` e un altro testo, e il test impone `maxTokens <= 100`, quindi rifiuterebbe proprio il valore accettato. `04-implementazione.md` non registra la deviazione e A18 non ha provato il `ping` con il servizio reale. Scenario: un modello che antepone qualche token o serializza l'input in modo più lungo esaurisce 64 token, l'SDK restituisce `stop_reason: max_tokens` senza blocco `tool_use` completo e la prova nelle Impostazioni mostra "Il modello non ha restituito un output strutturato" con una chiave valida (CA3 non soddisfatto). Inoltre la sezione Test qui sopra riporta "`maxTokens` 256", che non corrisponde al codice. Correzione: riportare `ping` ai valori dell'architettura (256, `conferma_collegamento`, testo indicato) e correggere il limite in `test/tasks.test.js` (per esempio `=== 256` oppure `<= 256`). In alternativa, dichiarare la deviazione in `04-implementazione.md` e farla accettare da Antonio. In entrambi i casi va allineata la riga CA3 della sezione Test.
 
 ### Da migliorare (non bloccanti)
+Aperte dopo il ciclo 2 (da riportare nella PR):
+- [src/main/llm/connect.js:41-43] (osservazione 2) La nota sulla privacy nomina solo l'endpoint di `extractTasks`; se `summarizeDay` o `reviewGoals` vanno a un altro endpoint, la nota non lo dice. Oggi c'è un solo endpoint e CA15 è rispettato.
+- [plugin/connection/https/App.js:14-17] (osservazione 3) Le opzioni sconosciute della connessione `https` si ignorano senza errore (per esempio un refuso `timeoutMS`), a differenza dell'endpoint `anthropic` che le rifiuta con `plugin_options`.
+- [plugin/endpoint/anthropic/App.js:48-56] (osservazione 4) Deroga D3 incompleta: l'SDK legge anche `ANTHROPIC_OPEN_TELEMETRY*` e `ANTHROPIC_WEBHOOK_SIGNING_KEY` dall'ambiente. Nessun rischio concreto oggi; conviene `openTelemetry: false` e aggiornare D3 in `03-architettura.md`.
+- [plugin/endpoint/anthropic/App.js:46] (osservazione 6) Con chiave mancante `llm_runs.error` vale `'Chiave mancante'` invece del testo di prima; il messaggio all'utente (`src/main/llm/errors.js:18`) è invariato.
+- [docs/work/001-astrazione-connessione-llm/04-implementazione.md:35-36] (nuova, di forma) Le righe `| F1 | ...` e `| F2 | ...` sono state aggiunte in coda alla sezione "Verifica finale A18", subito dopo un punto elenco e senza intestazione, quindi non fanno parte della tabella delle attività e non si vedono come tabella. Vanno spostate nella tabella in alto (dopo la riga di A18).
+
+Elenco del ciclo 1 (1, 5, 7, 8, 9, 10 risolte con F2; 2, 3, 4, 6 aperte, vedi sopra):
 - [src/renderer/app.js:50 e funzione `llmNote` (circa riga 334)] Il prefisso si ripete. `llm.error` comincia già con "Configurazione LLM non valida (config/llm.json): ...", quindi il toast mostra "Configurazione LLM non valida: Configurazione LLM non valida (config/llm.json): ..." e la nota "La configurazione dell'LLM non è valida: Configurazione LLM non valida ...". Meglio mostrare solo `llm.error`.
 - [src/main/llm/connect.js:41-43] La nota sulla privacy nomina solo l'endpoint di `extractTasks`. Se il file aziendale assegna `summarizeDay` o `reviewGoals` a un altro endpoint (scelta consentita anche da `settings.routes` fra gli endpoint del file), il diario va anche lì, ma la nota non lo dice. Oggi CA15 è rispettato perché c'è un solo endpoint. Conviene elencare gli endpoint distinti delle rotte che ricevono il testo del diario (tutte tranne `ping`).
 - [plugin/connection/https/App.js:14-17] Le opzioni sconosciute si ignorano senza errore. Per esempio un refuso `timeoutMS` lascia il valore predefinito senza avviso, mentre l'endpoint `anthropic` le rifiuta con `plugin_options`. Per coerenza con la "validazione stretta" dell'ADR 0004 (punto 3) conviene rifiutarle, aggiungendo il caso al test di contratto delle connessioni.
@@ -75,6 +98,6 @@ Verifiche richieste, con esito negativo (nessun problema):
 4. Indipendenza dal provider: ok. L'SDK si importa solo in `plugin/endpoint/anthropic/App.js` e i compiti si eseguono con `connect`.
 5. Dataset (`llm_runs`, `tasks.llm_original`): ok. L'involucro scrive sempre la riga, `raw` si conserva anche quando `clean` fallisce e `llm_original` non cambia. Unica differenza: il testo di `error` per `no_key` (non bloccante).
 6. Sicurezza Electron: ok. `preload.js` è invariato, non ci sono canali nuovi e i segreti passano solo da `secrets.js` tramite `ISecretStore`/`ISecretReader`.
-7. Astrazione delle dipendenze critiche: ok, con le deroghe D1-D3 dichiarate. D3 va completata (non bloccante). Ci sono test di contratto per `IConnection`, `IEndpoint` e `ISecretStore`. Il controllo della chiave nel contratto `IEndpoint` è da rafforzare (non bloccante).
-- Test per ogni modifica di comportamento: ok, salvo il test di `ping`, che fissa un valore diverso da quello accettato (bloccante sopra).
+7. Astrazione delle dipendenze critiche: ok, con le deroghe D1-D3 dichiarate. D3 va completata (non bloccante). Ci sono test di contratto per `IConnection`, `IEndpoint` e `ISecretStore`; dal ciclo 2 il contratto `IEndpoint` verifica anche la chiave inviata e l'assenza del segreto nei messaggi di `unreachable`.
+- Test per ogni modifica di comportamento: ok. Dal ciclo 2 il test di `ping` fissa i valori accettati (256, `conferma_collegamento`) e c'è un test per il prefisso non ripetuto.
 - Logica fuori da `main.js`: ok. `testLlm`, `setModel` e `llmStatus` stanno in `service.js`.

@@ -3,12 +3,12 @@
 - id: 001-astrazione-connessione-llm
 - titolo: Astrazione della connessione ai servizi LLM
 - branch: feature/001-astrazione-connessione-llm
-- fase: 5
+- fase: 6
 - analisi: accettata (rev 3, 2026-10-29)
 - piano: fatto
 - architettura: accettata (rev 2, 2026-10-29)
 - implementazione: fatto
-- verifica: in-corso
+- verifica: fatto
 - pr:
 
 Valori possibili: `da-fare`, `in-corso`, `in-revisione`, `accettata (rev N, AAAA-MM-GG)` per analisi e architettura, `fatto` per le altre. `fase` è il numero della fase in corso (1-6); a PR aperta diventa `6` con `pr:` valorizzato.
@@ -22,3 +22,4 @@ Valori possibili: `da-fare`, `in-corso`, `in-revisione`, `accettata (rev N, AAAA
 | 2026-10-29 | 2 | Piano scritto (A1..A18) |
 | 2026-10-29 | 3 | Architettura accettata (rev 2) con ADR 0004 |
 | 2026-10-29 | 4 | Implementazione A1-A18 completata (PR #1 con documenti e A17 già fusa) |
+| 2026-10-29 | 5 | Verifica: test 17/17 CA, revisione senza bloccanti (ciclo 2 dopo F1 e F2) |
