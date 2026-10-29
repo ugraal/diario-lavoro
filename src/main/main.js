@@ -40,7 +40,7 @@ function goalsWithUpdates() {
 function registerIpc() {
   handle('init', () => ({
     dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
-    myProjects: store.getSetting('myProjects', []), model: ((service.routes().extractTasks) || {}).model || '', secrets: secrets.status(),
+    myProjects: store.getSetting('myProjects', []), model: service.llmInfo().model, secrets: secrets.status(),
   }));
 
   handle('entries:list', () => store.listEntries());
@@ -75,13 +75,7 @@ function registerIpc() {
 
   handle('prj:options', (force) => service.prjOptions({ force: !!force }));
   handle('settings:myProjects', (list) => { store.setSetting('myProjects', (list || []).map(String)); return true; });
-  handle('settings:model', (model) => {
-    model = String(model || '').trim();
-    if (!model) throw new Error('Indica un modello');
-    const routes = {}; Object.keys(service.routes()).forEach((k) => { routes[k] = { provider: 'anthropic', model }; });
-    store.setSetting('routes', routes);
-    return model;
-  });
+  handle('settings:model', (model) => service.setModel(model));
   handle('secrets:set', (name, value) => {
     if (!['anthropic', 'asana'].includes(name)) throw new Error('Segreto sconosciuto');
     secrets.set(name, value); if (name === 'asana') asana.reset();

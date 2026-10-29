@@ -104,9 +104,27 @@ class Service {
   // connect può lanciare subito (configurazione non valida): l'errore diventa un rifiuto come gli altri.
   async runTask(name, input, ctx) { return this.connector.connect(name).run(input, ctx); }
 
-  // Prova del modello: compito ping tramite connect.
+  // Prova del modello: compito ping tramite connect (scrive una riga in llm_runs con task 'ping' e senza voce di diario).
+  // Messaggi d'errore in italiano dai codici normalizzati. Risponde true se il modello ha risposto.
   async testLlm() {
     try { await this.runTask('ping', {}, {}); return true; } catch (e) { throw new Error(describeLlmError(e)); }
+  }
+
+  // Cambia il modello personale: in settings.routes si scrive solo { model } per ogni compito (ping compreso),
+  // senza endpoint né provider: l'endpoint resta quello del file di configurazione.
+  setModel(model) {
+    model = String(model || '').trim();
+    if (!model) throw new Error('Indica un modello');
+    const routes = {};
+    Object.keys(this.routes()).forEach((k) => { routes[k] = { model }; });
+    this.store.setSetting('routes', routes);
+    return model;
+  }
+
+  // Modello e endpoint effettivi, letti dalla configurazione risolta.
+  llmInfo() {
+    const r = this.routes();
+    return Object.assign({ model: (r.extractTasks || {}).model || '' }, this.connector.info());
   }
 
   routes() { return this.connector.routes(); }
