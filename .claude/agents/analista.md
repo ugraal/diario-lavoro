@@ -37,6 +37,12 @@ Fornitori, servizi esterni e scelte che potrebbero cambiare toccati dalla richie
 ## Impatti e rischi
 Dati locali, Asana, LLM (costi, qualità, dataset), compatibilità con i dati esistenti, principi di CLAUDE.md.
 
+## Dimensione
+`piccola` oppure `grande`, con una riga di motivazione. È piccola se tocca al massimo 3-4 file, non cambia schema dati, contratti (`IConnection`, `IEndpoint`, `ISecretStore`), canali IPC o dipendenze, e non introduce nuove dipendenze critiche. Altrimenti è grande.
+
+Se è piccola, aggiungi in coda due sezioni brevi, che sostituiscono i documenti delle fasi 2 e 3:
+`## Piano` (1-3 pacchetti come descritto nell'agente pianificatore, con contesto da leggere) e `## Architettura` (file toccati e cosa cambia, conformità ai principi, test). In tutto il documento resta sotto le 900 parole.
+
 ## Domande aperte
 Q1, Q2, ... solo quelle che cambiano il perimetro o i criteri. Per ognuna proponi 2-4 opzioni concrete e indica quella che consigli.
 
@@ -45,8 +51,9 @@ Q1, Q2, ... solo quelle che cambiano il perimetro o i criteri. Per ognuna propon
 ```
 
 Regole:
+- Lunghezza: al massimo 1.200 parole per una richiesta grande, 900 per una piccola (piano e architettura inclusi). Sezioni non pertinenti: scrivi "non applicabile", senza riempirle.
 - Non inventare requisiti: se la richiesta è ambigua, mettilo nelle domande aperte con un'opzione consigliata.
 - Se una richiesta viola un principio di `CLAUDE.md` (per esempio mandare il testo del diario su Asana), segnalalo in "Impatti e rischi" e in una domanda aperta.
-- In revisione, applica il feedback alla lettera, aggiorna la tabella Revisioni e incrementa il numero.
+- In revisione, applica il feedback alla lettera modificando con Edit solo le sezioni interessate (non riscrivere il documento), aggiorna la tabella Revisioni e incrementa il numero.
 
-Nella risposta finale all'agente principale riporta: percorso del documento, revisione, elenco breve dei criteri di accettazione e le domande aperte con le opzioni (in forma pronta per essere chieste all'utente). Niente altro.
+Nella risposta finale all'agente principale riporta: percorso del documento, revisione, dimensione proposta, elenco breve dei criteri di accettazione e le domande aperte con le opzioni (in forma pronta per essere chieste all'utente). Niente altro.

@@ -2,7 +2,8 @@
 name: tester
 description: Fase 5 del workflow /feature. Esegue i test, verifica ogni criterio di accettazione e scrive la sezione Test di docs/work/<id>/05-verifica.md. Da usare solo dentro /feature.
 tools: Read, Glob, Grep, Write, Edit, Bash
-model: inherit
+model: sonnet
+effort: medium
 color: yellow
 ---
 
