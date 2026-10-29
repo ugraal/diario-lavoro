@@ -9,7 +9,7 @@
 - architettura: accettata (rev 2, 2026-10-29)
 - implementazione: fatto
 - verifica: fatto
-- pr:
+- pr: https://github.com/ugraal/diario-lavoro/pull/2
 
 Valori possibili: `da-fare`, `in-corso`, `in-revisione`, `accettata (rev N, AAAA-MM-GG)` per analisi e architettura, `fatto` per le altre. `fase` è il numero della fase in corso (1-6); a PR aperta diventa `6` con `pr:` valorizzato.
 
@@ -23,3 +23,4 @@ Valori possibili: `da-fare`, `in-corso`, `in-revisione`, `accettata (rev N, AAAA
 | 2026-10-29 | 3 | Architettura accettata (rev 2) con ADR 0004 |
 | 2026-10-29 | 4 | Implementazione A1-A18 completata (PR #1 con documenti e A17 già fusa) |
 | 2026-10-29 | 5 | Verifica: test 17/17 CA, revisione senza bloccanti (ciclo 2 dopo F1 e F2) |
+| 2026-10-29 | 6 | PR #2 aperta (completa la #1 già fusa) |
