@@ -5,12 +5,11 @@ const fs = require('fs');
 const { Store } = require('./store');
 const { Secrets } = require('./secrets');
 const { Asana } = require('./asana');
-const { Router } = require('./llm/router');
-const { AnthropicAdapter, describeLlmError } = require('./llm/anthropic');
+const { createConnector } = require('./llm/connect');
 const { Service } = require('./service');
 const { weekLabel } = require('../shared/util');
 
-let win, store, secrets, asana, service, anthropic;
+let win, store, secrets, asana, service;
 
 function createWindow() {
   win = new BrowserWindow({
@@ -41,7 +40,7 @@ function goalsWithUpdates() {
 function registerIpc() {
   handle('init', () => ({
     dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
-    myProjects: store.getSetting('myProjects', []), model: service.routes().extractTasks.model, secrets: secrets.status(),
+    myProjects: store.getSetting('myProjects', []), model: ((service.routes().extractTasks) || {}).model || '', secrets: secrets.status(),
   }));
 
   handle('entries:list', () => store.listEntries());
@@ -89,10 +88,7 @@ function registerIpc() {
     return secrets.status();
   });
   handle('asana:test', async () => { asana.reset(); const me = await asana.me(); return me.name || me.email || me.gid; });
-  handle('llm:test', async () => {
-    try { await anthropic.ping(service.routes().extractTasks.model); return true; }
-    catch (e) { throw new Error(describeLlmError(e)); }
-  });
+  handle('llm:test', () => service.testLlm());
   handle('data:export', async () => {
     const r = await dialog.showSaveDialog(win, { title: 'Esporta i dati', defaultPath: 'diario-lavoro-' + new Date().toISOString().slice(0, 10) + '.json', filters: [{ name: 'JSON', extensions: ['json'] }] });
     if (r.canceled || !r.filePath) return null;
@@ -107,9 +103,12 @@ app.whenReady().then(async () => {
   store = await Store.open(path.join(dir, 'diario.sqlite'));
   secrets = new Secrets(dir, safeStorage);
   asana = new Asana(() => secrets.get('asana'));
-  anthropic = new AnthropicAdapter(() => secrets.get('anthropic'));
-  const router = new Router({ adapters: { anthropic }, store, getRoutes: () => store.getSetting('routes', {}) });
-  service = new Service({ store, router, asana, secrets });
+  const root = path.join(__dirname, '..', '..');
+  const connector = createConnector({
+    configFile: path.join(root, 'config', 'llm.json'), pluginDir: path.join(root, 'plugin'), secrets,
+    logRun: (r) => store.logRun(r), getSettingsRoutes: () => store.getSetting('routes', {}),
+  });
+  service = new Service({ store, connector, asana, secrets });
   registerIpc();
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

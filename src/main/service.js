@@ -3,12 +3,12 @@
 'use strict';
 const { weekOfYmd } = require('../shared/util');
 const { pickParent } = require('./asana');
-const { describeLlmError } = require('./llm/anthropic');
-const { DEFAULT_ROUTES } = require('./llm/router');
+const { describeLlmError } = require('./llm/errors');
 
 class Service {
-  constructor({ store, router, asana, secrets }) {
-    this.store = store; this.router = router; this.asana = asana; this.secrets = secrets;
+  // connector: risultato di createConnector (connect, routes, info)
+  constructor({ store, connector, asana, secrets }) {
+    this.store = store; this.connector = connector; this.asana = asana; this.secrets = secrets;
     this.analyzing = new Set(); this.sending = new Set();
   }
 
@@ -39,9 +39,9 @@ class Service {
       const base = { date: entry.date, text: entry.text };
       const ctx = { entryId: id };
       const [rt, rs, rg] = await Promise.allSettled([
-        this.router.run('extractTasks', Object.assign({ prjOptions: prj.options, myProjects: this.store.getSetting('myProjects', []) }, base), ctx),
-        this.router.run('summarizeDay', base, ctx),
-        this.router.run('reviewGoals', Object.assign({ goals }, base), ctx),
+        this.runTask('extractTasks', Object.assign({ prjOptions: prj.options, myProjects: this.store.getSetting('myProjects', []) }, base), ctx),
+        this.runTask('summarizeDay', base, ctx),
+        this.runTask('reviewGoals', Object.assign({ goals }, base), ctx),
       ]);
       const week = weekOfYmd(entry.date);
       const parts = {};
@@ -101,7 +101,15 @@ class Service {
     } finally { this.sending.delete(id); }
   }
 
-  routes() { return Object.assign({}, DEFAULT_ROUTES, this.store.getSetting('routes', {})); }
+  // connect può lanciare subito (configurazione non valida): l'errore diventa un rifiuto come gli altri.
+  async runTask(name, input, ctx) { return this.connector.connect(name).run(input, ctx); }
+
+  // Prova del modello: compito ping tramite connect.
+  async testLlm() {
+    try { await this.runTask('ping', {}, {}); return true; } catch (e) { throw new Error(describeLlmError(e)); }
+  }
+
+  routes() { return this.connector.routes(); }
 }
 
 module.exports = { Service };
