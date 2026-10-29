@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+// Hook git pre-commit: niente commit su main e nomi di branch secondo le regole di CLAUDE.md.
+// Attivazione, una volta per clone:  git config core.hooksPath .githooks
+'use strict';
+const { execSync } = require('child_process');
+let branch = '';
+try { branch = execSync('git symbolic-ref --short HEAD', { encoding: 'utf8' }).trim(); } catch { process.exit(0); } // HEAD staccato: rebase in corso
+const TYPES = 'feat|fix|docs|test|refactor|perf|build|ci|chore|style|revert';
+if (branch === 'main' || branch === 'master') {
+  console.error('\nCommit su "' + branch + '" non consentito: ogni modifica ha il suo branch e arriva su main tramite PR.\n  git switch -c <tipo>/<slug>    (es. docs/aggiorna-readme, fix/timeout-asana)\n');
+  process.exit(1);
+}
+if (!new RegExp('^(feature/\\d{3}-[a-z0-9-]+|(' + TYPES + ')/[a-z0-9][a-z0-9-]*)$').test(branch)) {
+  console.error('\nNome del branch "' + branch + '" non conforme. Usa feature/<NNN>-<slug> per il workflow /feature, altrimenti <tipo>/<slug> con tipo tra: ' + TYPES.split('|').join(', ') + '.\n');
+  process.exit(1);
+}

@@ -58,6 +58,6 @@ Scelte che spettano all'utente, con 2-4 opzioni e quella consigliata.
 
 Quando una decisione ha valore oltre questa feature (nuovo provider LLM, cambio di storage, nuova dipendenza strutturale), scrivi anche un ADR in `docs/adr/NNNN-titolo.md` (Contesto, Decisione, Conseguenze, Stato: proposto) e citalo.
 
-Regole: preferisci la soluzione più semplice che rispetta i principi; niente nuove dipendenze se bastano poche righe; nessuna logica in `main.js` che non sia collante IPC.
+Regole: al massimo 2.000 parole; le sezioni non pertinenti si chiudono con "non applicabile". In revisione modifica con Edit solo le sezioni interessate. Se le scelte cambiano i pacchetti, aggiorna anche il loro "Contesto da leggere" in `02-piano.md`. Preferisci la soluzione più semplice che rispetta i principi; niente nuove dipendenze se bastano poche righe; nessuna logica in `main.js` che non sia collante IPC.
 
 Risposta finale all'agente principale: percorso del documento, revisione, sintesi in 5 righe al massimo, deroghe ai principi, nuove dipendenze, domande aperte pronte da porre all'utente.

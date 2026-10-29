@@ -40,10 +40,13 @@ Altrimenti è una nuova richiesta:
 4. Chiedi con AskUserQuestion: "Accetti l'analisi della feature <id> (revisione N)?" con le opzioni "Accetto" e "Servono modifiche" (con "Other" l'utente scrive cosa cambiare). Se servono modifiche, rilancia `analista` con il feedback alla lettera e torna al punto 2.
 5. All'accettazione: aggiungi in fondo a `01-analisi.md` la sezione `## Accettazione` (accettata da Antonio, data, revisione); in `STATO.md` metti `analisi: accettata (rev N, data)`, `fase: 2`. Commit `docs(<NNN>): analisi accettata`.
 
+### Percorso leggero
+L'analista propone la dimensione. Se propone `piccola`, chiedi conferma all'utente nella stessa domanda di accettazione (opzioni: "Accetto, percorso leggero", "Accetto, percorso completo", "Servono modifiche"). Con il percorso leggero l'accettazione copre anche le sezioni Piano e Architettura del documento: in `STATO.md` metti `percorso: leggero`, `analisi` e `architettura` entrambe `accettata (rev N, data)`, `piano: incluso`, `fase: 4`, e passa direttamente alla fase 4. Se durante l'implementazione il lavoro si rivela più grande (tocca schema, contratti, IPC o dipendenze), fermati e proponi all'utente di passare al percorso completo.
+
 ## Fase 2: piano e scomposizione
 
-1. Lancia il subagent `pianificatore` (id, cartella). Scrive `02-piano.md`: attività `A1..An` piccole, ordinate, ciascuna legata ai criteri di accettazione.
-2. Mostra all'utente l'elenco delle attività in una riga ciascuna. Non serve accettazione formale, ma se l'utente commenta, rilancia `pianificatore` con il commento.
+1. Lancia il subagent `pianificatore` (id, cartella). Scrive `02-piano.md`: da 2 a 5 pacchetti di lavoro `P1..Pn`, ciascuno con le sue attività, i criteri coperti e il contesto minimo da leggere.
+2. Mostra all'utente l'elenco dei pacchetti in una riga ciascuno. Non serve accettazione formale, ma se l'utente commenta, rilancia `pianificatore` con il commento.
 3. `STATO.md`: `piano: fatto`, `fase: 3`, architettura `in-corso`. Commit `docs(<NNN>): piano`.
 
 ## Fase 3: piano architetturale (iterativo, con accettazione)
@@ -56,15 +59,15 @@ Altrimenti è una nuova richiesta:
 
 ## Fase 4: implementazione
 
-1. Crea `04-implementazione.md` con una tabella `Attività | Stato | Commit | Note`.
-2. Per ogni attività di `02-piano.md`, in ordine, lancia il subagent `sviluppatore` con: id, cartella, codice attività. Lo sviluppatore implementa, aggiunge i test, esegue `npm test` e fa un commit `feat(<NNN>): A<k> ...`.
-3. Dopo ogni attività aggiorna la tabella. Se lo sviluppatore segnala che serve **deviare dall'architettura accettata** (nuova dipendenza, cambio di schema non previsto, nuovo canale IPC non previsto), fermati: spiega la deviazione all'utente e chiedi con AskUserQuestion se accettarla. Se la accetta, annota la deviazione in `03-architettura.md` (sezione `## Deviazioni accettate`); se no, chiedi allo sviluppatore un'alternativa.
+1. Crea `04-implementazione.md` con una tabella `Pacchetto | Attività | Stato | Commit | Note`.
+2. Per ogni pacchetto, in ordine, lancia **un** subagent `sviluppatore` con: id, cartella, codice del pacchetto. Lo sviluppatore svolge tutte le attività del pacchetto, con test e un commit `feat(<NNN>): A<k> ...` per ciascuna. Non lanciare un subagent per singola attività.
+3. Dopo ogni pacchetto aggiorna la tabella. Se lo sviluppatore segnala che serve **deviare dall'architettura accettata** (nuova dipendenza, cambio di schema non previsto, nuovo canale IPC non previsto), fermati: spiega la deviazione all'utente e chiedi con AskUserQuestion se accettarla. Se la accetta, annota la deviazione in `03-architettura.md` (sezione `## Deviazioni accettate`); se no, chiedi allo sviluppatore un'alternativa.
 4. Finite le attività: `STATO.md` `implementazione: fatto`, `fase: 5`, `verifica: in-corso`. Commit dei documenti.
 
 ## Fase 5: test e revisione
 
 1. Lancia in parallelo `tester` e `revisore` (id, cartella). Il primo scrive la sezione `## Test` di `05-verifica.md`, il secondo la sezione `## Revisione`.
-2. Se ci sono test che falliscono, criteri di accettazione non coperti o problemi bloccanti della revisione: torna alla fase 4 con un'attività correttiva `F<k>` (aggiungila a `02-piano.md` e alla tabella) e poi ripeti la fase 5. Dopo 3 cicli senza esito, fermati e chiedi all'utente.
+2. Se ci sono test che falliscono, criteri di accettazione non coperti o problemi bloccanti della revisione: torna alla fase 4 con un'attività correttiva `F<k>` (aggiungila a `02-piano.md` e alla tabella; raggruppa in un solo `F<k>` le correzioni sugli stessi file) e poi ripeti la fase 5. Dopo 3 cicli senza esito, fermati e chiedi all'utente.
 3. Mostra all'utente l'esito: criteri di accettazione coperti, test eseguiti, osservazioni non bloccanti.
 4. `STATO.md`: `verifica: fatto`, `fase: 6`. Commit `docs(<NNN>): verifica`.
 

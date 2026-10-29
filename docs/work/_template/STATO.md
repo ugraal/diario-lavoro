@@ -3,6 +3,7 @@
 - id: NNN-slug
 - titolo: Titolo breve
 - branch: feature/NNN-slug
+- percorso: completo
 - fase: 1
 - analisi: in-revisione
 - piano: da-fare

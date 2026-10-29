@@ -44,6 +44,8 @@ Le funzionalità nuove si sviluppano con il comando `/feature`, che segue sei fa
 5. **Test e revisione.**
 6. **Apertura della PR** su GitHub.
 
+Le richieste piccole seguono il **percorso leggero**: analisi, piano e architettura in un solo documento con una sola accettazione, poi fasi 4-6. È l'analista a proporre la classificazione, l'utente a confermarla.
+
 I documenti di ogni feature stanno in `docs/work/<id>/` e il loro stato in `docs/work/<id>/STATO.md`. `/feature <id>` riprende una feature interrotta, `/feature-stato` mostra a che punto è.
 
 Regole per l'agente principale:
@@ -52,6 +54,8 @@ Regole per l'agente principale:
 - I subagent non possono fare domande all'utente: le domande aperte che riportano le poni tu.
 - Prima della fase 4 non si modificano `src/`, `test/`, `plugin/`, `config/` e `package*.json`. Un hook (`.claude/hooks/gate.js`) lo impone. Per una correzione urgente fuori dal workflow l'utente può creare il file `.claude/gate-off`, mai tu.
 - Mai fare push su `main`, mai `push --force`. Si lavora su `feature/<id>`.
+- **Ogni modifica ha il suo branch, anche fuori dal workflow.** Una feature, una correzione, un aggiornamento di documenti o di configurazione: ciascuno su un branch dedicato, che raccoglie una o più attività simili dello stesso tema, e arriva su `main` solo tramite PR. Nome: `feature/<NNN>-<slug>` per il workflow, altrimenti `<tipo>/<slug>` con il tipo di Conventional Commits (`fix/…`, `docs/…`, `chore/…`, `refactor/…`, …). Mai commit diretti su `main`: il hook `.githooks/pre-commit` li rifiuta.
+- **Sobrietà.** Documenti brevi e proporzionati alla richiesta, entro i limiti indicati negli agenti; nelle revisioni si modificano solo le sezioni toccate. Ai subagent si passa il contesto mirato indicato nel piano, non "leggi tutto".
 
 ## Git
 
