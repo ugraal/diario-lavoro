@@ -115,6 +115,8 @@ class Service {
   setModel(model) {
     model = String(model || '').trim();
     if (!model) throw new Error('Indica un modello');
+    const bad = this.connector.info().error;
+    if (bad) throw new Error(bad); // con configurazione rotta non scrivo rotte vuote in settings
     const routes = {};
     Object.keys(this.routes()).forEach((k) => { routes[k] = { model }; });
     this.store.setSetting('routes', routes);
@@ -125,6 +127,17 @@ class Service {
   llmInfo() {
     const r = this.routes();
     return Object.assign({ model: (r.extractTasks || {}).model || '' }, this.connector.info());
+  }
+
+  // Stato della configurazione LLM per l'avvio: non lancia mai, anche con file mancante o non valido.
+  // { label, endpoint, error (messaggio con file e voce, o null), warnings, model }
+  llmStatus() {
+    try {
+      const i = this.connector.info();
+      return { label: i.label || '', endpoint: i.endpoint || '', error: i.error || null, warnings: i.warnings || [], model: this.llmInfo().model };
+    } catch (e) {
+      return { label: '', endpoint: '', error: describeLlmError(e), warnings: [], model: '' };
+    }
   }
 
   routes() { return this.connector.routes(); }

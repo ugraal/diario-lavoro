@@ -39,10 +39,15 @@ function goalsWithUpdates() {
 }
 
 function registerIpc() {
-  handle('init', () => ({
-    dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
-    myProjects: store.getSetting('myProjects', []), model: service.llmInfo().model, secrets: secrets.status(),
-  }));
+  // Con configurazione LLM non valida init risponde lo stesso: llm.error porta il messaggio per il renderer.
+  handle('init', () => {
+    const llm = service.llmStatus();
+    return {
+      dataDir: app.getPath('userData'), version: app.getVersion(), week: weekLabel(new Date()),
+      myProjects: store.getSetting('myProjects', []), model: llm.model, secrets: secrets.status(),
+      llm: { label: llm.label, endpoint: llm.endpoint, error: llm.error, warnings: llm.warnings },
+    };
+  });
 
   handle('entries:list', () => store.listEntries());
   handle('entries:detail', (id) => ({ entry: store.getEntry(id), tasks: store.tasksOfEntry(id), updates: store.updatesOfEntry(id) }));
