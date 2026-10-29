@@ -16,15 +16,47 @@ Richiesta da passare a `/feature`, così com'è:
 Correzione: con claude-sonnet-5-5 l'analisi fallisce con "tool_choice: type tool and any are not supported for this model" (400). Il plugin endpoint anthropic usa la scelta forzata dello strumento per l'output strutturato. Passare a structured outputs (output_config.format, json_schema) mantenendo la vecchia modalità come alternativa scelta da configurazione per modello; adeguare gli schemi dei compiti ai vincoli (additionalProperties false, niente vincoli numerici o di lunghezza); tradurre questo tipo di errore in un messaggio chiaro; aggiungere un test live opzionale con chiave vera, escluso da npm test.
 ```
 
-## B2 · Come si ottiene e si gestisce la chiave Asana
+## B2 · Accesso ad Asana con OAuth e identità dell'utente
 
-Stato: da analizzare · Registrata: 2026-10-29
+Stato: analizzato, decisioni aperte · Registrata: 2026-10-29 · Analisi: 2026-10-29
 
-Oggi ogni dipendente crea a mano un Personal Access Token su Asana e lo incolla nelle Impostazioni. Da analizzare prima di farne una feature:
+### Obiettivo
+Il collega non deve più creare e incollare un token Asana: si collega dal browser con il suo account (OAuth). L'app sa chi è l'utente (per ora con l'email inserita a mano, in seguito con l'account Microsoft 365 aziendale). Massima astrazione dai fornitori, secondo il principio 7 e l'ADR 0003.
 
-- **Modalità di accesso:** token personale incollato a mano, oppure un'app OAuth registrata da Statwolf con login dal browser (niente token da copiare, rinnovo automatico, revoca centralizzata), oppure un'altra soluzione. Vincolo da mantenere: ognuno scrive su Asana con la propria identità.
-- **Primo avvio:** quanto deve essere guidato il collegamento per un collega non tecnico.
-- **Ciclo di vita:** scadenza, revoca, cambio di PC, uscita di un dipendente.
-- **Permessi:** cosa può fare il token rispetto a quello che serve all'app (leggere i progetti, cercare i task padre, creare sottoattività).
-- **Conservazione:** sempre tramite `ISecretStore` (ADR 0003); da coordinare con la futura feature sulla crittografia dei segreti.
-- **Stessa domanda per la chiave Anthropic:** oggi è una chiave per dipendente dell'organizzazione Console; valutare se gestirle allo stesso modo.
+### Cosa dice oggi la documentazione Asana
+- OAuth con authorization code; PKCE (S256) obbligatorio per i redirect `localhost`/`127.0.0.1`/URN nativo. Access token di 1 ora, rinnovo con refresh token, revoca con `/-/oauth_revoke`.
+- Scope granulari `risorsa:azione` (es. `tasks:read`, `tasks:write`, `projects:read`, `users:read`); `default` solo per app con permessi completi.
+- **Punto critico:** lo scambio del codice e il rinnovo del token richiedono il `client_secret`, che secondo Asana non va mai messo in codice lato client. Un'app desktop non può custodirlo. La documentazione non descrive un'eccezione per le app native con PKCE: va verificato.
+- I PAT non scadono, agiscono con tutti i permessi dell'utente e Asana li indica per uso individuale, non per app usate da più persone.
+- Gli amministratori possono bloccare app OAuth e PAT per workspace: va gestito l'errore e va fatta approvare l'app nel workspace Statwolf.
+
+### Astrazioni proposte (stesso schema plugin dell'ADR 0003)
+- **`IIdentityProvider`** (`plugin/identity/<nome>/App.js`): chi è l'utente. Restituisce almeno `{ email, displayName, source }`. Implementazioni: `manual` (email inserita nelle Impostazioni, subito) e `m365` (Microsoft Entra ID con MSAL Node, in seguito: vedi B3).
+- **`IAuthProvider`** (`plugin/auth/<nome>/App.js`): ottiene una credenziale valida per un servizio; metodi indicativi `getAccessToken()`, `signIn()`, `signOut()`, `status()`. Implementazioni: `static` (token o chiave conservati, cioè il PAT e la chiave Anthropic di oggi) e `oauth2-pkce` (generico: URL di autorizzazione e token, scope, client id e redirect da configurazione, rinnovo automatico). Asana diventa solo una configurazione di `oauth2-pkce`, non codice.
+- Connessioni ed endpoint ricevono un `IAuthProvider` dal nucleo, mai token diretti (coerente con ADR 0003, punto 6). I token si conservano tramite `ISecretStore`.
+- Controllo di coerenza: l'email dell'identità e quella dell'account Asana collegato devono coincidere; se no, avviso.
+
+### Opzioni per il client secret di Asana
+1. **PKCE senza secret**, se Asana lo accetta per le app native. Da verificare con una prova o con il supporto Asana. È la soluzione migliore: nessun server.
+2. **Piccolo broker sull'intranet** (o funzione serverless) che custodisce il secret e fa solo scambio e rinnovo del token. Non conserva dati. È un'eccezione al principio 1 (nessun server centrale) da dichiarare in un ADR; si sposa con la Web API intranet prevista per il router.
+3. **Secret dentro l'app.** Sconsigliato da Asana: chiunque abbia l'app può estrarlo. Da scartare salvo uso strettamente interno e consapevole.
+4. **Restare sul PAT** con un collegamento guidato (link diretto alla console sviluppatori, incolla, verifica). Il più semplice, ma resta manuale, senza scadenza e senza revoca centrale.
+
+Proposta: si costruiscono subito le astrazioni con `manual` e `static` (comportamento di oggi, nessun rischio), si fa la prova dell'opzione 1 e, se fallisce, si decide tra 2 e 4.
+
+### Cosa serve da fuori
+- Registrazione dell'app OAuth nella console sviluppatori Asana (chi la possiede: un account di servizio Statwolf, non personale) e approvazione nel workspace.
+- Per B3: registrazione dell'app in Microsoft Entra da parte dell'amministratore del tenant.
+
+### Domande aperte
+- Chi registra e possiede l'app Asana?
+- Se serve il broker (opzione 2), dove gira: intranet Statwolf o servizio cloud?
+- La chiave Anthropic resta per dipendente (con `static`) o passa anch'essa da un servizio intranet autenticato con l'identità M365?
+
+## B3 · Identità aziendale Microsoft 365
+
+Stato: prossimo passo dopo B2 · Registrata: 2026-10-29
+
+Implementazione `m365` di `IIdentityProvider` con MSAL Node: app pubblica a tenant singolo registrata in Microsoft Entra (client id e tenant id forniti dall'amministratore, "Allow public client flows" attivo, redirect `http://localhost` per il browser di sistema), nessun client secret, permesso `User.Read` per email e nome. Sostituisce l'email inserita a mano.
+
+Valore oltre all'identità: lo stesso accesso Microsoft potrà autenticare i servizi intranet (router LLM, eventuale broker OAuth di B2) tramite un `IAuthProvider` dedicato, senza chiavi da distribuire.
