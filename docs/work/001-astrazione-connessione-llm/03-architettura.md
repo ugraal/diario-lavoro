@@ -234,7 +234,7 @@ new Anthropic({
 - i codici per 401, 403, 404, 429, 500, 529 e per la risposta senza output;
 - `unreachable` quando `fetch` rifiuta;
 - che il trasporto passi solo da `connection.fetch`: `globalThis.fetch` viene sostituito con una funzione che fallisce il test;
-- che la chiave della richiesta sia quella fornita dallo store (header `x-api-key` per Anthropic, controllato nella fixture);
+- che la chiave della richiesta sia quella fornita dallo store (per Anthropic l'header è `Authorization: Bearer`, controllato nella fixture; nota: nell'SDK 1.3.0 la chiave viaggia così e non come `x-api-key`, verificato in A6);
 - che il segreto non compaia in nessun `message` né in `describe()`.
 
 Tutto con `maxRetries: 0` nella connessione finta, per non aspettare i tempi di attesa tra i tentativi. Un test specifico di `anthropic` confronta il corpo JSON inviato con quello che oggi produce `AnthropicAdapter` (CA1) e controlla che con `maxRetries: 2` un 500 venga ritentato due volte.
@@ -348,7 +348,7 @@ Nessuna. Si usano `@anthropic-ai/sdk` 1.3.0, già presente e ora importato solo 
 | `test/plugins.test.js` | factory: `../x`, `Anthropic`, `a/b`, vuoto, inesistente, non funzione, membro mancante (fixture `broken`), caricamento da `test/fixtures/plugin` (CA10) |
 | `test/connections.test.js` | contratto `IConnection` su ogni cartella di `plugin/connection/` e sulla fixture; delega di `https` a `globalThis.fetch` (CA6) |
 | `test/endpoints.test.js` | contratto `IEndpoint` su ogni cartella di `plugin/endpoint/`, con connessione e segreti finti e fixture delle risposte (CA7, parte di CA4, CA14) |
-| `test/anthropic-endpoint.test.js` | corpo della richiesta identico a quello di oggi (`model`, `max_tokens` 4096, `system`, `messages`, `tools`, `tool_choice`); `x-api-key` dallo store; `baseURL` dalla connessione; retry con `maxRetries` (CA1) |
+| `test/anthropic-endpoint.test.js` | corpo della richiesta identico a quello di oggi (`model`, `max_tokens` 4096, `system`, `messages`, `tools`, `tool_choice`); `Authorization: Bearer` dallo store (non `x-api-key`, vedi A6); `baseURL` dalla connessione; retry con `maxRetries` (CA1) |
 | `test/tasks.test.js` | compito `ping`: schema, `clean` su output valido e rotto, `maxTokens`; gli altri compiti non hanno `maxTokens` |
 | `test/llm-config.test.js` | JSON rotto, file assente, campo sconosciuto, nome di plugin non valido, endpoint e connessione inesistenti, segreto sconosciuto, compito sconosciuto e mancante; merge `a`/`b`; formato vecchio `provider`; endpoint inesistente in `settings` con avviso; campi `plugin`/`baseURL` in `settings` ignorati; `ping` ricavato; `routes` su disco non riscritto (CA2, CA11, CA12) |
 | `test/connect.test.js` | configurazione di test con `summarizeDay` sull'endpoint finto e il resto su `anthropic`, con il `fetch` finto della connessione fixture. Verifica una riga in `llm_runs` per ogni successo e fallimento, con `provider` corretto; errore di `clean` con `raw` conservato; `e.llm` presente; il segreto assente da `llm_runs` (CA13, CA1) |
