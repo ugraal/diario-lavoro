@@ -32,5 +32,5 @@ Ordine di esecuzione: A17, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A1
 - **Config rotta**: non provata a mano in app, perché `main.js` legge sempre `config/llm.json` dal repo e senza modificare il file reale non c'è modo di sostituirlo. Coperta da `test/service-config.test.js` (verde) e `test/llm-config.test.js`.
 - **Non verificato**: prove con chiave vera (analisi, prova, errori), per scelta: nessuna chiamata reale ad Anthropic.
 - La verifica A18 non ha rilevato correzioni, ma la revisione di fase 5 ha poi trovato il bloccante su `ping` (corretto con F1) e osservazioni non bloccanti (corrette con F2, tranne 2, 3, 4 e 6, annotate nella PR).
-| F1 | da-fare | | ping come da architettura (bloccante revisione) |
-| F2 | da-fare | | osservazioni non bloccanti |
+| F1 | fatto | 0e19c56 | ping come da architettura (bloccante revisione) |
+| F2 | fatto | f745f6e | osservazioni non bloccanti |
