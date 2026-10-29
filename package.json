@@ -1,0 +1,18 @@
+{
+  "name": "diario-lavoro",
+  "version": "0.1.0",
+  "description": "Diario di lavoro con estrazione delle attività via LLM e invio ad Asana",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.3.0",
+    "sql.js": "1.15.2"
+  },
+  "devDependencies": {
+    "electron": "45.1.0"
+  }
+}

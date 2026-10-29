@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.sqlite
+*.sqlite.tmp
+secrets.json
+.claude/feature-attiva
+.claude/gate-off
+.claude/settings.local.json
+shots/
