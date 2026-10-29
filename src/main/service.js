@@ -7,13 +7,13 @@ const { describeLlmError } = require('./llm/errors');
 
 class Service {
   // connector: risultato di createConnector (connect, routes, info)
-  constructor({ store, connector, asana, secrets }) {
-    this.store = store; this.connector = connector; this.asana = asana; this.secrets = secrets;
+  constructor({ store, connector, asana }) {
+    this.store = store; this.connector = connector; this.asana = asana;
     this.analyzing = new Set(); this.sending = new Set();
   }
 
   async prjOptions(opts) {
-    if (!this.secrets.get('asana')) return { source: 'fallback', options: require('./asana-config').prjFallback };
+    if (!this.asana.hasToken()) return { source: 'fallback', options: require('./asana-config').prjFallback };
     return this.asana.prjOptions(opts);
   }
 

@@ -9,11 +9,14 @@ class AsanaError extends Error {
 }
 
 class Asana {
-  constructor(getToken, fetchImpl) {
-    this.getToken = getToken;
+  // secrets: ISecretReader (vista in sola lettura); il token si legge solo da lì.
+  constructor({ secrets, secretName = 'asana', fetch: fetchImpl } = {}) {
+    this.secrets = secrets; this.secretName = secretName;
     this.fetch = fetchImpl || ((...a) => fetch(...a));
     this.cache = { me: null, ws: null, prj: null, parents: new Map() };
   }
+  getToken() { return this.secrets.get(this.secretName); }
+  hasToken() { return !!this.getToken(); }
   reset() { this.cache = { me: null, ws: null, prj: null, parents: new Map() }; }
 
   async req(method, path, { query, body } = {}) {

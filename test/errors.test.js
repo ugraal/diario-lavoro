@@ -45,8 +45,8 @@ async function main() {
   const connector = createConnector({ configFile: cfg, pluginDir: path.join(__dirname, 'fixtures', 'plugin'), secrets: { get: () => 'k', names: () => ['anthropic'] }, logRun: (r) => rows.push(r) });
   const entry = { id: 'e1', date: '2026-10-29', text: 'ho lavorato' };
   const store = { getEntry: () => entry, activeGoals: () => [], goalUpdates: () => [], getSetting: (k, d) => d, applyAnalysis() {} };
-  const asana = { prjOptions: async () => ({ options: [] }) };
-  const svc = new Service({ store, connector, asana, secrets: { get: () => 'x' } });
+  const asana = { hasToken: () => true, prjOptions: async () => ({ options: [] }) };
+  const svc = new Service({ store, connector, asana });
   for (const [code, msg] of CASI.filter(([c]) => c !== 'no_output' || true)) {
     globalThis.__scriptedEndpoint = async () => { throw Object.assign(new Error('tecnico'), { code }); };
     await assert.rejects(svc.analyzeEntry('e1'), { message: msg });
@@ -60,7 +60,7 @@ async function main() {
   assert.strictEqual(await svc.testLlm(), true);
   const rotto = createConnector({ configFile: path.join(dir, 'manca.json'), pluginDir: path.join(__dirname, 'fixtures', 'plugin'), secrets: { get: () => '', names: () => [] }, logRun() {} });
   assert.throws(() => rotto.connect('extractTasks'), (e) => e.code === 'config');
-  const svc2 = new Service({ store, connector: rotto, asana, secrets: { get: () => 'x' } });
+  const svc2 = new Service({ store, connector: rotto, asana });
   await assert.rejects(svc2.analyzeEntry('e1'), /Configurazione LLM non valida/);
   console.log('OK: errori LLM');
 }

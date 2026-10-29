@@ -79,9 +79,8 @@ const CFG = require('../src/main/asana-config');
     if (p === '/tasks/PARENT/subtasks') return ok(created.map((c, i) => ({ gid: 'SUB' + (i + 1), name: c.name })));
     return { ok: false, status: 404, json: async () => ({ errors: [{ message: 'not found ' + p }] }) };
   };
-  const secrets = { get: (n) => (n === 'asana' ? 'tok' : 'key') };
-  const asana = new Asana(() => 'tok', fetchMock);
-  const svc = new Service({ store, connector, asana, secrets });
+  const asana = new Asana({ secrets: { get: () => 'tok' }, secretName: 'asana', fetch: fetchMock });
+  const svc = new Service({ store, connector, asana });
 
   // voce + analisi
   const e = store.saveEntry({ date: '2026-10-29', text: 'Tutta la mattina su Diasorin, poi call Stadler. Devo preparare meglio le call.' });

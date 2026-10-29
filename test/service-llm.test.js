@@ -25,7 +25,7 @@ async function main() {
     secrets: { get: () => 'k', names: () => ['anthropic'] }, logRun: (r) => rows.push(r),
     getSettingsRoutes: () => store.getSetting('routes', {}),
   });
-  const svc = new Service({ store, connector, asana: {}, secrets: { get: () => 'x' } });
+  const svc = new Service({ store, connector, asana: { hasToken: () => true } });
 
   // Chiave valida
   const seen = [];

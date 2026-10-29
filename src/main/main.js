@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { Store } = require('./store');
 const { Secrets } = require('./secrets');
+const { readOnlyView } = require('./contracts/secret-store');
 const { Asana } = require('./asana');
 const { createConnector } = require('./llm/connect');
 const { Service } = require('./service');
@@ -96,13 +97,13 @@ app.whenReady().then(async () => {
   const dir = app.getPath('userData');
   store = await Store.open(path.join(dir, 'diario.sqlite'));
   secrets = new Secrets(dir, safeStorage);
-  asana = new Asana(() => secrets.get('asana'));
+  asana = new Asana({ secrets: readOnlyView(secrets, ['asana']), secretName: 'asana' });
   const root = path.join(__dirname, '..', '..');
   const connector = createConnector({
     configFile: path.join(root, 'config', 'llm.json'), pluginDir: path.join(root, 'plugin'), secrets,
     logRun: (r) => store.logRun(r), getSettingsRoutes: () => store.getSetting('routes', {}),
   });
-  service = new Service({ store, connector, asana, secrets });
+  service = new Service({ store, connector, asana });
   registerIpc();
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
