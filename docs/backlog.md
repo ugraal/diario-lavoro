@@ -112,3 +112,33 @@ Da valutare una per una (ciascuna sarebbe una feature a sé), chiedendosi prima 
 - Ripristino da backup (oggi c'è solo l'export), notifiche, scelta del tema.
 
 Vantaggi strutturali dell'artefatto da tenere presenti: nessuna installazione (vedi B4 e discussione sulla PWA) e accesso ad Asana tramite connettore senza token (vedi B2).
+
+## B6 · `/diario` da Claude Code e dalla chat di Claude
+
+Stato: analizzato, da decidere · Priorità: da decidere · Registrata: 2026-10-30
+
+Obiettivo: da una sessione di Claude Code (terminale) o da una chat di Claude nell'app desktop, scrivere `/diario …` e interagire con il diario senza aprire l'app: aggiungere una nota alla voce di oggi, chiedere cosa c'è da inviare ad Asana, rileggere la settimana.
+
+### Come si realizza
+- **Un server MCP del diario** (Node, locale, stdio). MCP è uno standard aperto: lo stesso server funziona con Claude Code, con l'app desktop di Claude e con altri client compatibili (principio 7: nessun legame con un solo fornitore). Strumenti indicativi: `diario_aggiungi` (testo alla voce di un giorno, predefinito oggi), `diario_leggi` (voci di un periodo), `attivita_da_rivedere`, `obiettivi`.
+- **Un comando `/diario`** come skill che usa quegli strumenti.
+- **Un plugin** che impacchetta server MCP e skill, installabile sia in Claude Code sia nell'app desktop (Cowork), così il collega non configura nulla a mano.
+- Limite: dalla chat web di claude.ai il PC del dipendente non è raggiungibile (i dati sono locali). Funziona dall'app desktop e da Claude Code.
+
+### Il punto critico: due programmi sullo stesso database
+Lo storage è `sql.js`: l'app tiene il database in memoria e riscrive l'intero file a ogni modifica. Se anche il server MCP scrivesse il file, l'ultimo a salvare cancellerebbe le modifiche dell'altro. Opzioni:
+1. **Casella di arrivo (consigliata per partire).** Il server MCP non tocca il database: scrive le note in una cartella `inbox/` (un file JSON per nota). L'app le importa all'avvio e mentre è aperta. Funziona anche ad app chiusa, nessun conflitto. Le letture usano l'ultima copia salvata del database (coerente grazie alla scrittura atomica, al più un po' indietro).
+2. **API locale dell'app.** L'app aperta espone un'interfaccia su `localhost` protetta da un token, e il server MCP passa da lì: un solo programma scrive, letture sempre aggiornate. Richiede l'app aperta.
+3. **Database multiprocesso** (`better-sqlite3` con WAL): modulo nativo da ricompilare per sistema, contro l'ADR 0001. Sconsigliata.
+
+### Caso d'uso di maggior valore
+In Claude Code, `/diario` a fine sessione: Claude conosce già cosa è stato fatto (commit, file toccati, discussione) e scrive una bozza di voce del diario, che il dipendente rilegge prima di salvarla.
+
+### Privacy
+Quello che passa da `/diario` entra nella conversazione con Claude e resta nella sua cronologia. Gli strumenti di lettura devono restituire solo quanto richiesto (es. un giorno o una settimana), non l'intero diario.
+
+Richiesta da passare a `/feature` (prima iterazione, opzione 1):
+
+```
+Aggiungere un server MCP locale del diario e un comando /diario utilizzabili da Claude Code e dall'app desktop di Claude, impacchettati come plugin. Prima iterazione: aggiungere testo alla voce di un giorno (predefinito oggi) tramite una casella di arrivo (cartella inbox/ con un file JSON per nota) che l'app importa all'avvio e mentre è aperta, senza che il server MCP scriva mai sul database; lettura in sola lettura delle voci di un periodo e delle attività da rivedere. In Claude Code, /diario senza argomenti propone una bozza di voce a partire da quanto fatto nella sessione, da confermare prima del salvataggio.
+```
