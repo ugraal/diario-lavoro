@@ -83,3 +83,32 @@ Statwolf ha Intune e sta per avviare i lavori di configurazione. Questa voce rac
 - Firma del codice: Azure Trusted Signing (supportato da `electron-builder`) oppure certificato OV/EV. Se servisse anche macOS: Apple Developer Program e notarizzazione.
 
 Riferimenti: [electron-builder, aggiornamento automatico](https://www.electron.build/docs/features/auto-update), [electron-builder, firma su Windows](https://electron.build/code-signing-win).
+
+## B5 · Inserimento manuale delle attività
+
+Stato: in attesa · Priorità: da decidere · Registrata: 2026-10-30
+
+Alcuni colleghi preferiscono inserire le attività a mano, come nel vecchio Monitor progetti (artefatto su claude.ai), invece di scrivere il diario e farle ricavare all'LLM. Richiesta candidata al percorso leggero.
+
+Richiesta da passare a `/feature`:
+
+```
+Aggiungere nella vista Progetti un inserimento manuale rapido delle attività, alternativo al diario: titolo (anche più righe incollate, una attività per riga), progetto PRJ, settimana (predefinita quella corrente), durata, fatta o da fare. Le attività manuali entrano nello stesso flusso di revisione e invio ad Asana di quelle ricavate dal diario, ma vanno distinte come manuali (origine registrata, llm_original vuoto) per non sporcare il dataset delle proposte LLM. Nessuna chiamata LLM.
+```
+
+### Funzioni da tracker presenti nell'artefatto, da sottoporre al team
+Da valutare una per una (ciascuna sarebbe una feature a sé), chiedendosi prima se l'app debba diventare anche un tracker o restare un registro di lavoro:
+
+- Vista "Oggi": scadute, in scadenza oggi, attività con la stella, in attesa di colleghi o esterni.
+- Scadenze e priorità (campo Priorità di Asana) sulle attività da fare; flag di emergenza.
+- Assegnazione a colleghi (elenco del team su Asana) e attività "con" colleghi o esterni.
+- Riallineamento con Asana dopo l'invio: completamento, scadenza e testo modificati nell'app arrivano su Asana.
+- Importazione da Asana delle proprie sottoattività della settimana e chiusura automatica di quelle completate lì.
+- Riporto delle attività aperte al task padre della settimana corrente.
+- Creazione di incidenti sulla board Incidenti di Asana.
+- Stato dei progetti (nei tempi, da tenere d'occhio, bloccato), archiviazione ed eliminazione.
+- Report per progetto e periodo: copia come testo, HTML, Markdown, CSV.
+- Bacheca dei feedback del team.
+- Ripristino da backup (oggi c'è solo l'export), notifiche, scelta del tema.
+
+Vantaggi strutturali dell'artefatto da tenere presenti: nessuna installazione (vedi B4 e discussione sulla PWA) e accesso ad Asana tramite connettore senza token (vedi B2).
