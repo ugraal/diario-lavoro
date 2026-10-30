@@ -60,3 +60,26 @@ Stato: prossimo passo dopo B2 · Registrata: 2026-10-29
 Implementazione `m365` di `IIdentityProvider` con MSAL Node: app pubblica a tenant singolo registrata in Microsoft Entra (client id e tenant id forniti dall'amministratore, "Allow public client flows" attivo, redirect `http://localhost` per il browser di sistema), nessun client secret, permesso `User.Read` per email e nome. Sostituisce l'email inserita a mano.
 
 Valore oltre all'identità: lo stesso accesso Microsoft potrà autenticare i servizi intranet (router LLM, eventuale broker OAuth di B2) tramite un `IAuthProvider` dedicato, senza chiavi da distribuire.
+
+## B4 · Distribuzione dell'app con Intune
+
+Stato: in attesa · **Priorità: bassa, non prioritaria al momento** · Registrata: 2026-10-30
+
+Statwolf ha Intune e sta per avviare i lavori di configurazione. Questa voce raccoglie cosa chiedere all'IT perché l'app si possa distribuire senza intoppi; il lavoro sul repo (pacchetto, firma, pipeline di rilascio) parte solo quando la voce diventa prioritaria. Le indicazioni su Intune e Defender sono generali: vanno verificate con chi configura le policy di Statwolf.
+
+### Lavoro sul repo (feature future, un branch ciascuna)
+- Configurazione di `electron-builder` con target NSIS (l'unico che `electron-updater` aggiorna in automatico su Windows), includendo `plugin/` e `config/` (ADR 0003), più aggiornamento automatico.
+- Pipeline su GitHub Actions (runner Windows): a ogni tag `v*` build, firma e pubblicazione.
+- Canale di pubblicazione degli aggiornamenti: web server intranet o Azure Blob. Sconsigliate le release di un repo GitHub privato (richiedono un token su ogni PC).
+
+### Checklist per l'IT
+1. **Chi gestisce gli aggiornamenti.** Consigliato per partire: Intune installa una volta l'installer NSIS come app Win32 (`.intunewin`, installazione silenziosa `/S`, comportamento "User", installazione per utente) e poi l'app si aggiorna da sola; la regola di rilevamento controlla solo l'esistenza dell'app, non la versione (altrimenti reinstallazioni in loop). Alternativa: installazione per macchina, un pacchetto Intune per ogni rilascio, aggiornamento automatico disattivato.
+2. **Policy di sicurezza.** AppLocker/WDAC: le regole predefinite bloccano gli eseguibili fuori da `Program Files` e `Windows`, quindi serve una regola sull'editore della firma. Regole ASR di Defender (eseguibili poco diffusi o recenti): eccezione basata sulla firma. SmartScreen: da provare sul PC pilota.
+3. **Rete e proxy.** Raggiungibili `api.anthropic.com`, `app.asana.com`, il server degli aggiornamenti e, in futuro, i servizi intranet del router.
+4. **Entra/Azure, nella stessa finestra di lavoro.** App registration per il login M365 (B3): pubblica, tenant singolo, accesso da client pubblico abilitato, redirect `http://localhost`, permesso `User.Read`; servono client id e tenant id. Account Azure Trusted Signing per la firma del codice, con l'identità usata dalla pipeline.
+5. **Pilota.** 2-3 PC in un gruppo Intune dedicato: installazione, primo avvio, aggiornamento automatico, comportamento sotto le policy reali.
+
+### Prerequisiti
+- Firma del codice: Azure Trusted Signing (supportato da `electron-builder`) oppure certificato OV/EV. Se servisse anche macOS: Apple Developer Program e notarizzazione.
+
+Riferimenti: [electron-builder, aggiornamento automatico](https://www.electron.build/docs/features/auto-update), [electron-builder, firma su Windows](https://electron.build/code-signing-win).
